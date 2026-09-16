@@ -1,4 +1,4 @@
-export type AdminResource = "customers" | "instructors" | "classes" | "categories" | "schedules" | "sessions" | "plans";
+export type AdminResource = "customers" | "instructors" | "classes" | "categories" | "sessions" | "plans";
 
 export type AdminRecordValue = string | number | boolean | string[] | null;
 export type AdminRecord = { id: string; [key: string]: AdminRecordValue };

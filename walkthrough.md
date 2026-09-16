@@ -125,19 +125,17 @@ Accessible via the Admin role with 15 dedicated modules:
 1. **`/admin` (Overview)**: Top-level studio KPIs (Active Members, Today's Bookings, Monthly Revenue ₹, Average Class Capacity %).
 2. **`/admin/customers`**: Customer database with search, filter, detail view, edit details, and mock deletion.
 3. **`/admin/instructors`**: Teacher directory, specialties, experience, and assigned workload.
-4. **`/admin/classes`**: Course catalog management (titles, descriptions, capacities, prices, images, colors).
+4. **`/admin/classes` (Sessions)**: Yoga offering and session template management (titles, descriptions, capacities, prices, instructors, images, active status).
 5. **`/admin/categories`**: Category tagging (Foundation, Flow, Strength, Restoration).
-6. **`/admin/schedules`**: Weekly recurring class scheduling template builder.
-7. **`/admin/sessions`**: Specific dated calendar sessions, capacity overrides, and cancellation triggers.
-8. **`/admin/plans`**: Membership plan creation and pricing updates, immediately synchronized with public `/plans` and customer renewal screens.
-9. **`/admin/memberships`**: Master list of active, expired, and paused student memberships.
-10. **`/admin/bookings`**: Master studio booking ledger with status controls (`Confirmed`, `Cancelled`, `Attended`, `No-Show`).
-11. **`/admin/payments`**: Financial ledger tracking all incoming payments, transaction methods (UPI/Card), and timestamps.
-12. **`/admin/refunds`**: Staged refund management pipeline: review `Requested` refunds, move them to `Processing`, and issue `Completed` refunds.
-13. **`/admin/attendance`**: Cross-session attendance audits and teacher completion rates.
-14. **`/admin/notifications`**: Multi-channel marketing campaign composer (create and dispatch simulated In-App, Email, or WhatsApp announcements to segmented audiences).
-15. **`/admin/reports`**: Visual analytics dashboards (Revenue by category, session attendance trends) with one-click **CSV export**.
-16. **`/admin/settings`**: Operational rules editor: adjust the cancellation cutoff window (e.g. 2 hours), configure trial pricing (e.g. ₹500), and a **Protected Factory Reset** button that clears `localStorage` and restores the original seed dataset.
+6. **`/admin/bookings`**: Centralized booking control center (10 KPI cards, reservations, attendance statuses, payment flows, and refund handling).
+7. **`/admin/plans`**: Membership plan creation and pricing updates, immediately synchronized with public `/plans` and customer renewal screens.
+8. **`/admin/memberships`**: Master list of active, expired, and paused student memberships.
+9. **`/admin/payments`**: Financial ledger tracking all incoming payments, transaction methods (UPI/Card), and timestamps.
+10. **`/admin/refunds`**: Staged refund management pipeline: review `Requested` refunds, move them to `Processing`, and issue `Completed` refunds.
+11. **`/admin/attendance`**: Cross-session attendance audits and teacher completion rates.
+12. **`/admin/notifications`**: Multi-channel marketing campaign composer (create and dispatch simulated In-App, Email, or WhatsApp announcements to segmented audiences).
+13. **`/admin/reports`**: Visual analytics dashboards (Revenue by category, session attendance trends) with one-click **CSV export**.
+14. **`/admin/settings`**: Operational rules editor: adjust the cancellation cutoff window (e.g. 2 hours), configure trial pricing (e.g. ₹500), and a **Protected Factory Reset** button that clears `localStorage` and restores the original seed dataset.
 
 ---
 

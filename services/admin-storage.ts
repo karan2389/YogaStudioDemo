@@ -13,22 +13,15 @@ const categorySeeds: AdminRecord[] = [
   { id: "cat-restoration", name: "Restoration", description: "Slower practices for mobility, breath and recovery.", status: "active" },
 ];
 
-const scheduleSeeds: AdminRecord[] = [
-  { id: "sch-hatha-tue", classId: "class-hatha", instructorId: "ins-nikita", dayOfWeek: "Tuesday", time: "07:00", capacity: 14, status: "active" },
-  { id: "sch-vinyasa-tue", classId: "class-vinyasa", instructorId: "ins-ananya", dayOfWeek: "Tuesday", time: "18:30", capacity: 16, status: "active" },
-  { id: "sch-beginner-wed", classId: "class-beginner", instructorId: "ins-nikita", dayOfWeek: "Wednesday", time: "08:00", capacity: 12, status: "active" },
-  { id: "sch-power-wed", classId: "class-power", instructorId: "ins-rohan", dayOfWeek: "Wednesday", time: "19:00", capacity: 12, status: "active" },
-];
-
 const seeds: Record<AdminResource, AdminRecord[]> = {
   customers: customers.map((item) => ({ ...item })) as AdminRecord[],
   instructors: instructors.map((item) => ({ ...item })) as AdminRecord[],
   classes: yogaClasses.map((item) => ({ ...item })) as AdminRecord[],
   categories: categorySeeds,
-  schedules: scheduleSeeds,
   sessions: sessions.map((item) => ({ ...item })) as AdminRecord[],
   plans: membershipPlans.map((item) => ({ ...item })) as AdminRecord[],
 };
+
 
 function announce() {
   window.dispatchEvent(new Event("ananda-demo-change"));

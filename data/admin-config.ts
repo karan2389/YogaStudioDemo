@@ -75,18 +75,6 @@ export const adminResourceConfigs: Record<AdminResource, AdminResourceConfig> = 
     titleFor: (record) => String(record.name), detailsFor: (record) => [String(record.description)], statusFor: (record) => String(record.status),
     newRecord: () => ({ id: id("cat"), name: "", description: "", status: "active" }),
   },
-  schedules: {
-    resource: "schedules", eyebrow: "Timetable", title: "Recurring schedules", singular: "schedule",
-    copy: "Define the weekly teaching pattern used to prepare future studio sessions.",
-    fields: [
-      { key: "classId", label: "Class", type: "select", options: classOptions }, { key: "instructorId", label: "Instructor", type: "select", options: instructorOptions },
-      { key: "dayOfWeek", label: "Day", type: "select", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].map((value) => ({ label: value, value })) },
-      { key: "time", label: "Start time", type: "text", required: true, placeholder: "07:00" }, { key: "capacity", label: "Capacity", type: "number", required: true },
-      { key: "status", label: "Status", type: "select", options: statusOptions },
-    ],
-    titleFor: (record) => `${className(record.classId)} · ${record.dayOfWeek}`, detailsFor: (record) => [`${record.time} · ${record.capacity} seats`, instructorName(record.instructorId)], statusFor: (record) => String(record.status),
-    newRecord: () => ({ id: id("sch"), classId: "class-hatha", instructorId: "ins-nikita", dayOfWeek: "Monday", time: "07:00", capacity: 12, status: "active" }),
-  },
   sessions: {
     resource: "sessions", eyebrow: "Timetable", title: "Studio sessions", singular: "session",
     copy: "Review dated sessions, adjust capacity and keep scheduling status accurate.",

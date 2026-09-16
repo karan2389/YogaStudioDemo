@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, BellRing, CalendarCheck, CalendarDays, CalendarRange, CalendarSearch, ClipboardCheck, ContactRound, CreditCard, Dumbbell, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, UsersRound, WalletCards } from "lucide-react";
+import { BarChart3, BellRing, CalendarCheck, CalendarDays, ClipboardCheck, ContactRound, CreditCard, Dumbbell, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, UsersRound, WalletCards } from "lucide-react";
 import { DemoIndicator } from "@/components/shared/demo-indicator";
 import { Footer } from "@/components/shared/footer";
 import { Header } from "@/components/shared/header";
@@ -18,7 +18,6 @@ const navGroups = [
     { href: "/admin/instructors", label: "Instructors", icon: UsersRound },
     { href: "/admin/classes", label: "Sessions", icon: CalendarDays },
     { href: "/admin/categories", label: "Categories", icon: FolderTree },
-    { href: "/admin/schedules", label: "Schedules", icon: CalendarRange },
     { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
     { href: "/admin/plans", label: "Plans", icon: WalletCards },
   ] },
@@ -38,7 +37,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const { session, ready } = useDemoSession();
   if (!ready) return <main className="min-h-screen bg-[#eef1f1]" />;
   if (!session || session.role !== "admin") {
-    return <main className="min-h-screen bg-[#fbf8f1]"><DemoIndicator /><Header /><section className="grid min-h-[65vh] place-items-center px-5 py-16"><div className="max-w-lg rounded-[1.75rem] border border-[#17362d]/10 bg-white p-8 text-center shadow-lg"><LogIn className="mx-auto size-7 text-[#3e5a62]" /><h1 className="mt-4 font-display text-4xl">Admin access required.</h1><p className="mt-3 text-sm leading-6 text-[#65756e]">Switch to the Studio Admin demo account to manage people, programmes and schedules.</p><div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row"><Button className="rounded-full bg-[#254d3f] text-white" onClick={() => setDemoSession(demoAccounts[2])}>Continue as Admin</Button><Button asChild variant="outline" className="rounded-full bg-transparent"><Link href="/login">Demo login</Link></Button></div></div></section><Footer /></main>;
+    return <main className="min-h-screen bg-[#fbf8f1]"><DemoIndicator /><Header /><section className="grid min-h-[65vh] place-items-center px-5 py-16"><div className="max-w-lg rounded-[1.75rem] border border-[#17362d]/10 bg-white p-8 text-center shadow-lg"><LogIn className="mx-auto size-7 text-[#3e5a62]" /><h1 className="mt-4 font-display text-4xl">Admin access required.</h1><p className="mt-3 text-sm leading-6 text-[#65756e]">Switch to the Studio Admin demo account to manage people, sessions and bookings.</p><div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row"><Button className="rounded-full bg-[#254d3f] text-white" onClick={() => setDemoSession(demoAccounts[2])}>Continue as Admin</Button><Button asChild variant="outline" className="rounded-full bg-transparent"><Link href="/login">Demo login</Link></Button></div></div></section><Footer /></main>;
   }
 
   return <main className="min-h-screen bg-[#eef1f1] text-[#17362d]">
