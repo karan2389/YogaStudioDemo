@@ -3,7 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, BellRing, CalendarCheck, CalendarDays, ClipboardCheck, ContactRound, CreditCard, Dumbbell, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, UsersRound, WalletCards } from "lucide-react";
+import { BarChart3, BellRing, CalendarCheck, CalendarDays, ClipboardCheck, ContactRound, CreditCard, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, UsersRound, WalletCards } from "lucide-react";
+import { DashboardNavLink } from "@/components/shared/dashboard-nav-link";
 import { DemoIndicator } from "@/components/shared/demo-indicator";
 import { Footer } from "@/components/shared/footer";
 import { Header } from "@/components/shared/header";
@@ -11,12 +12,20 @@ import { Button } from "@/components/ui/button";
 import { useDemoSession } from "@/hooks/use-demo-session";
 import { demoAccounts, setDemoSession } from "@/services/demo-storage";
 
-const navGroups = [
+interface AdminNavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  aliases?: string[];
+}
+
+const navGroups: { label: string; items: AdminNavItem[] }[] = [
   { label: "Core", items: [
-    { href: "/admin", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
     { href: "/admin/customers", label: "Customers", icon: ContactRound },
     { href: "/admin/instructors", label: "Instructors", icon: UsersRound },
-    { href: "/admin/classes", label: "Sessions", icon: CalendarDays },
+    { href: "/admin/classes", label: "Sessions", icon: CalendarDays, aliases: ["/admin/sessions"] },
     { href: "/admin/categories", label: "Categories", icon: FolderTree },
     { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
     { href: "/admin/plans", label: "Plans", icon: WalletCards },
@@ -44,10 +53,26 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <DemoIndicator /><Header />
     <div className="mx-auto grid w-full max-w-[1440px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[248px_minmax(0,1fr)] lg:px-8 lg:py-8">
       <aside className="lg:sticky lg:top-[108px] lg:self-start">
-        <div className="max-h-[calc(100vh-112px)] overflow-y-auto rounded-[1.5rem] bg-[#203b45] p-4 text-white">
+        <div className="max-h-[calc(100vh-112px)] overflow-y-auto rounded-[1.5rem] bg-[#203b45] p-4 text-white shadow-sm">
           <div className="px-3 py-4"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#9bc3bf]">Studio administration</p><p className="mt-2 font-display text-2xl">Control centre</p><p className="mt-2 flex items-center gap-2 text-xs text-[#c6d4d7]"><PanelsTopLeft className="size-3.5" /> Demo operations</p></div>
           <nav aria-label="Admin dashboard" className="flex gap-5 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
-            {navGroups.map((group) => <div key={group.label} className="flex shrink-0 gap-2 lg:flex-col"><p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7fa09f] lg:block">{group.label}</p>{group.items.map(({ href, label, icon: Icon }) => { const active = href === "/admin" ? pathname === href : pathname.startsWith(href); return <Link key={href} href={href} className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${active ? "bg-[#f5f7f5] text-[#17362d]" : "text-[#c6d4d7] hover:bg-white/8 hover:text-white"}`}><Icon className="size-4" />{label}</Link>; })}</div>)}
+            {navGroups.map((group) => (
+              <div key={group.label} className="flex shrink-0 gap-1 lg:flex-col">
+                <p className="hidden px-3 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#7fa09f] lg:block">{group.label}</p>
+                {group.items.map(({ href, label, icon: Icon, exact, aliases }) => (
+                  <DashboardNavLink
+                    key={href}
+                    href={href}
+                    label={label}
+                    icon={Icon}
+                    currentPathname={pathname}
+                    exact={exact}
+                    aliases={aliases}
+                    variant="admin"
+                  />
+                ))}
+              </div>
+            ))}
           </nav>
         </div>
       </aside>

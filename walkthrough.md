@@ -224,12 +224,12 @@ Yoga_Studio_LMS_Demo_Phase_7/
 │   ├── demo/                   # Top demo switcher menu
 │   ├── instructor/             # Session list, attendance roster, promo dialog
 │   ├── plans/                  # Pricing comparison cards
-│   ├── shared/                 # Header, Footer, Brand, ClassCard, SessionCard, etc.
+│   ├── shared/                 # Header, Footer, Brand, ClassCard, SessionCard, DashboardNavLink, etc.
 │   └── ui/                     # Radix & shadcn design primitives (dialog, button, table, etc.)
 ├── data/                       # Initial mock fixtures (mock-data.ts, admin-config.ts)
 ├── db/                         # Drizzle schema (ready for future SQLite/D1 database)
 ├── hooks/                      # Custom hooks (useDemoSession, useMobile)
-├── lib/                        # Utility helpers (cn, formatting)
+├── lib/                        # Utility helpers (cn, navigation active route matching)
 ├── public/                     # Static imagery (hero.jpg, class.jpg, instructor.jpg, icons)
 ├── services/                   # Browser storage and admin operations layer
 ├── types/                      # TypeScript domain, demo, and admin interfaces

@@ -3,7 +3,8 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, CalendarCheck, CreditCard, LayoutDashboard, LogIn, UserRound, WalletCards } from "lucide-react";
+import { Bell, CalendarCheck, CreditCard, LogIn, UserRound, WalletCards } from "lucide-react";
+import { DashboardNavLink } from "@/components/shared/dashboard-nav-link";
 import { DemoIndicator } from "@/components/shared/demo-indicator";
 import { Footer } from "@/components/shared/footer";
 import { Header } from "@/components/shared/header";
@@ -32,13 +33,20 @@ export function CustomerDashboardShell({ children }: { children: ReactNode }) {
       <DemoIndicator /><Header />
       <div className="mx-auto grid w-full max-w-[1380px] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[238px_minmax(0,1fr)] lg:px-8 lg:py-8">
         <aside className="lg:sticky lg:top-[108px] lg:self-start">
-          <div className="rounded-[1.5rem] bg-[#17362d] p-4 text-white">
+          <div className="rounded-[1.5rem] bg-[#17362d] p-4 text-white shadow-sm">
             <div className="px-3 py-4"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#dfb77e]">Customer portal</p><p className="mt-2 font-display text-2xl">Hi, {session.name.split(" ")[0]}</p></div>
             <nav aria-label="Customer dashboard" className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
-              {nav.map(({ href, label, icon: Icon }) => {
-                const active = pathname === href || (href === "/dashboard/bookings" && pathname === "/dashboard");
-                return <Link key={href} href={href} className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-[#f8f1e7] text-[#17362d]" : "text-[#c5d2cb] hover:bg-white/8 hover:text-white"}`}><Icon className="size-4" />{label}</Link>;
-              })}
+              {nav.map(({ href, label, icon: Icon }) => (
+                <DashboardNavLink
+                  key={href}
+                  href={href}
+                  label={label}
+                  icon={Icon}
+                  currentPathname={pathname}
+                  aliases={href === "/dashboard/bookings" ? ["/dashboard"] : undefined}
+                  variant="customer"
+                />
+              ))}
             </nav>
           </div>
         </aside>
