@@ -66,12 +66,12 @@ export const membershipPlans: MembershipPlan[] = [
 ];
 
 export const sessions: Session[] = [
-  { id: "ses-1", classId: "class-hatha", instructorId: "ins-nikita", startsAt: "2026-09-16T07:00:00+05:30", capacity: 14, bookedSeats: 6, status: "scheduled" },
-  { id: "ses-2", classId: "class-vinyasa", instructorId: "ins-ananya", startsAt: "2026-09-16T18:30:00+05:30", capacity: 16, bookedSeats: 11, status: "scheduled" },
-  { id: "ses-3", classId: "class-beginner", instructorId: "ins-nikita", startsAt: "2026-09-17T08:00:00+05:30", capacity: 12, bookedSeats: 4, status: "scheduled" },
-  { id: "ses-4", classId: "class-power", instructorId: "ins-rohan", startsAt: "2026-09-17T19:00:00+05:30", capacity: 12, bookedSeats: 9, status: "scheduled" },
-  { id: "ses-5", classId: "class-pranayama", instructorId: "ins-nikita", startsAt: "2026-09-18T07:30:00+05:30", capacity: 18, bookedSeats: 7, status: "scheduled" },
-  { id: "ses-6", classId: "class-mobility", instructorId: "ins-ananya", startsAt: "2026-09-19T17:30:00+05:30", capacity: 16, bookedSeats: 8, status: "scheduled" },
+  { id: "ses-1", classId: "class-hatha", instructorId: "ins-nikita", date: "2026-09-16", startTime: "07:00", endTime: "08:00", startsAt: "2026-09-16T07:00:00+05:30", capacity: 14, bookedSeats: 6, status: "scheduled" },
+  { id: "ses-2", classId: "class-vinyasa", instructorId: "ins-ananya", date: "2026-09-16", startTime: "18:30", endTime: "19:45", startsAt: "2026-09-16T18:30:00+05:30", capacity: 16, bookedSeats: 11, status: "scheduled" },
+  { id: "ses-3", classId: "class-beginner", instructorId: "ins-nikita", date: "2026-09-17", startTime: "08:00", endTime: "09:00", startsAt: "2026-09-17T08:00:00+05:30", capacity: 12, bookedSeats: 4, status: "scheduled" },
+  { id: "ses-4", classId: "class-power", instructorId: "ins-rohan", date: "2026-09-17", startTime: "19:00", endTime: "20:00", startsAt: "2026-09-17T19:00:00+05:30", capacity: 12, bookedSeats: 9, status: "scheduled" },
+  { id: "ses-5", classId: "class-pranayama", instructorId: "ins-nikita", date: "2026-09-18", startTime: "07:30", endTime: "08:15", startsAt: "2026-09-18T07:30:00+05:30", capacity: 18, bookedSeats: 7, status: "scheduled" },
+  { id: "ses-6", classId: "class-mobility", instructorId: "ins-ananya", date: "2026-09-19", startTime: "17:30", endTime: "18:30", startsAt: "2026-09-19T17:30:00+05:30", capacity: 16, bookedSeats: 8, status: "scheduled" },
 ];
 
 export const memberships: Membership[] = [

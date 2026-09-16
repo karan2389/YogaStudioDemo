@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   CreditCard,
+  Download,
   Eye,
   FileText,
   Filter,
@@ -20,6 +21,9 @@ import {
   X,
   XCircle,
 } from "lucide-react";
+import { exportToCsv, type CsvColumn } from "@/lib/export-csv";
+import { formatSessionTime } from "@/lib/date-time";
+import { getStudioSessions } from "@/services/admin-storage";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -272,12 +276,75 @@ export function AdminBookingsView() {
     }
   }
 
-  function handleAdvanceRefund(refundId: string) {
-    advanceRefund(refundId, adminNoteInput);
+  function handleAdvanceRefund(id: string) {
+    advanceRefund(id);
+    setRefunds(getOperationalRefunds());
+    setBookings(getOperationalBookings());
   }
 
-  function handleRejectRefund(refundId: string) {
-    rejectRefund(refundId, adminNoteInput);
+  function handleRejectRefund(id: string) {
+    rejectRefund(id);
+    setRefunds(getOperationalRefunds());
+    setBookings(getOperationalBookings());
+  }
+
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+
+  function handleExportBookings() {
+    if (filteredBookings.length === 0) {
+      setExportNotice("There is no data available to export.");
+      setTimeout(() => setExportNotice(null), 3000);
+      return;
+    }
+
+    const studioSessions = getStudioSessions();
+
+    const columns: CsvColumn<OperationalBooking>[] = [
+      { header: "Booking ID", accessor: (b) => b.id },
+      { header: "Customer Name", accessor: (b) => b.customerName },
+      { header: "Customer Email", accessor: (b) => b.customerEmail ?? "" },
+      { header: "Customer Phone", accessor: (b) => b.customerPhone ?? "" },
+      { header: "Session/Class Name", accessor: (b) => b.className },
+      { header: "Instructor", accessor: (b) => b.instructorName ?? "Nikita Verma" },
+      {
+        header: "Session Date",
+        accessor: (b) => {
+          const s = studioSessions.find((item) => item.id === b.sessionId);
+          return s?.date || (s?.startsAt ? s.startsAt.slice(0, 10) : b.startsAt.slice(0, 10));
+        },
+      },
+      {
+        header: "Session Start Time",
+        accessor: (b) => {
+          const s = studioSessions.find((item) => item.id === b.sessionId);
+          const time = s?.startTime || (s?.startsAt ? s.startsAt.slice(11, 16) : b.startsAt.slice(11, 16));
+          return formatSessionTime(time);
+        },
+      },
+      {
+        header: "Session End Time",
+        accessor: (b) => {
+          const s = studioSessions.find((item) => item.id === b.sessionId);
+          return s?.endTime ? formatSessionTime(s.endTime) : "";
+        },
+      },
+      { header: "Booking Type", accessor: (b) => b.type },
+      { header: "Booking Status", accessor: (b) => b.status },
+      { header: "Amount", accessor: (b) => `₹${b.amount}` },
+      { header: "Payment ID", accessor: (b) => b.paymentId ?? "" },
+      { header: "Payment Method", accessor: (b) => b.paymentMethod ?? "UPI" },
+      { header: "Payment Status", accessor: (b) => b.paymentStatus ?? "paid" },
+      { header: "Refund ID", accessor: (b) => b.refundId ?? "" },
+      { header: "Refund Status", accessor: (b) => b.refundStatus ?? "none" },
+      { header: "Booking Created At", accessor: (b) => b.createdAt ?? "" },
+      { header: "Cancelled At", accessor: (b) => b.cancelledAt ?? "" },
+    ];
+
+    const result = exportToCsv("bookings", columns, filteredBookings);
+    if (!result.success && result.message) {
+      setExportNotice(result.message);
+      setTimeout(() => setExportNotice(null), 3000);
+    }
   }
 
   const statusBadge = (status: string) => {
@@ -368,6 +435,13 @@ export function AdminBookingsView() {
         </div>
       </div>
 
+      {exportNotice && (
+        <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#a65f3d]/20 bg-[#fbf0e9] p-4 text-sm font-semibold text-[#8b4a2e]">
+          <AlertCircle className="size-5 shrink-0 text-[#a65f3d]" />
+          {exportNotice}
+        </div>
+      )}
+
       {/* Search & Filter Controls */}
       <div className="mb-6 rounded-[1.5rem] border border-[#17362d]/10 bg-white p-5 shadow-[0_6px_22px_rgba(36,57,47,0.035)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -380,16 +454,28 @@ export function AdminBookingsView() {
               className="h-11 rounded-full border-[#17362d]/15 bg-[#f8f9f7] pl-10 text-sm"
             />
           </div>
-          {hasActiveFilters && (
+          <div className="flex flex-wrap items-center gap-2.5">
             <Button
               variant="outline"
               size="sm"
-              onClick={resetFilters}
-              className="h-11 rounded-full border-[#8b3d32]/20 text-[#8b3d32] hover:bg-[#fbf4f3]"
+              onClick={handleExportBookings}
+              disabled={filteredBookings.length === 0}
+              className="h-11 rounded-full border-[#17362d]/15 bg-white px-5 font-semibold text-[#17362d] hover:bg-[#edf0e9] disabled:opacity-50"
             >
-              <X className="mr-1 size-3.5" /> Reset Filters
+              <Download className="mr-2 size-4 text-[#a65f3d]" />
+              Export CSV
             </Button>
-          )}
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetFilters}
+                className="h-11 rounded-full border-[#8b3d32]/20 text-[#8b3d32] hover:bg-[#fbf4f3]"
+              >
+                <X className="mr-1 size-3.5" /> Reset Filters
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filter Dropdowns Grid */}

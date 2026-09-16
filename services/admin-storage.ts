@@ -61,3 +61,52 @@ export function getAdminMembershipPlans(): MembershipPlan[] {
     featured: Boolean(item.featured),
   }));
 }
+
+export function getStudioSessions(): (typeof sessions) {
+  const rawRecords = getAdminCollection("sessions");
+  return rawRecords.map((item) => {
+    const startsAt = String(item.startsAt ?? "");
+    let date = item.date ? String(item.date) : "";
+    let startTime = item.startTime ? String(item.startTime) : "";
+    if ((!date || !startTime) && startsAt) {
+      const d = new Date(startsAt);
+      if (!isNaN(d.getTime())) {
+        const parts = new Intl.DateTimeFormat("en-CA", {
+          timeZone: "Asia/Kolkata",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(d);
+        date = parts;
+        startTime = new Intl.DateTimeFormat("en-GB", {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }).format(d);
+      }
+    }
+
+    return {
+      id: String(item.id),
+      classId: String(item.classId),
+      instructorId: String(item.instructorId),
+      date: date || "2026-09-16",
+      startTime: startTime || "07:00",
+      endTime: item.endTime ? String(item.endTime) : undefined,
+      startsAt: startsAt || `${date || "2026-09-16"}T${startTime || "07:00"}:00+05:30`,
+      capacity: Number(item.capacity ?? 12),
+      bookedSeats: Number(item.bookedSeats ?? 0),
+      status: (item.status as "scheduled" | "completed" | "cancelled") ?? "scheduled",
+      notes: item.notes ? String(item.notes) : undefined,
+    };
+  });
+}
+
+export function upsertStudioSession(session: (typeof sessions)[number]) {
+  upsertAdminRecord("sessions", session as unknown as AdminRecord);
+}
+
+export function deleteStudioSession(id: string) {
+  deleteAdminRecord("sessions", id);
+}

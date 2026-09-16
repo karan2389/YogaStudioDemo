@@ -7,6 +7,7 @@ import { CtaBanner } from "@/components/shared/cta-banner";
 import { PublicPage } from "@/components/shared/public-page";
 import { SessionCard } from "@/components/shared/session-card";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { ClassUpcomingSessions } from "@/components/classes/class-upcoming-sessions";
 import { getClass, getInstructor, sessions, yogaClasses } from "@/data/mock-data";
 
 type PageProps = { params: Promise<{ slug: string }> };
@@ -73,7 +74,7 @@ export default async function ClassDetailsPage({ params }: PageProps) {
         <Container>
           <div className="flex items-end justify-between gap-5"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#a65f3d]">Upcoming sessions</p><h2 className="mt-3 font-display text-4xl">Choose a time that works.</h2></div><Link href="/schedule" className="hidden items-center gap-2 text-sm font-bold text-[#a65f3d] sm:flex">Full schedule <ArrowRight className="size-4" /></Link></div>
           <div className="mt-8 rounded-[1.5rem] bg-white px-5 py-2 sm:px-7">
-            {upcoming.length > 0 ? upcoming.map((session) => <SessionCard key={session.id} session={session} yogaClass={getClass(session.classId)} instructor={getInstructor(session.instructorId)} />) : <div className="py-10 text-center"><p className="font-display text-2xl">More sessions are being scheduled.</p><p className="mt-2 text-sm text-[#65756e]">Explore the full timetable for similar classes.</p></div>}
+            <ClassUpcomingSessions classId={item.id} initialSessions={upcoming} />
           </div>
         </Container>
       </section>

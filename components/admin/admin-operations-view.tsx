@@ -1,11 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { CalendarDays, CheckCircle2, CreditCard, RefreshCw, Search, UserRound, WalletCards } from "lucide-react";
+import { AlertCircle, CalendarDays, CheckCircle2, CreditCard, Download, RefreshCw, Search, UserRound, WalletCards } from "lucide-react";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
+import { customers } from "@/data/mock-data";
+import { formatSessionDate, formatSessionTime } from "@/lib/date-time";
+import { exportToCsv, type CsvColumn } from "@/lib/export-csv";
 import { advanceRefund, getOperationalBookings, getOperationalMemberships, getOperationalPayments, getOperationalRefunds, rejectRefund, updateOperationStatus } from "@/services/admin-operations";
 import { getDemoAttendance, getDemoPromotions } from "@/services/demo-storage";
 import type { OperationalBooking, OperationalMembership, OperationalPayment, OperationalRefund } from "@/types/admin";
@@ -31,6 +34,7 @@ export function AdminOperationsView({ view }: { view: View }) {
   const [attendance, setAttendance] = useState<DemoAttendanceRecord[]>([]);
   const [promotions, setPromotions] = useState<DemoPromotionRecord[]>([]);
   const [query, setQuery] = useState("");
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
 
   useEffect(() => { const load = () => { setMemberships(getOperationalMemberships()); setBookings(getOperationalBookings()); setPayments(getOperationalPayments()); setRefunds(getOperationalRefunds()); setAttendance(getDemoAttendance()); setPromotions(getDemoPromotions()); }; load(); window.addEventListener("ananda-demo-change", load); return () => window.removeEventListener("ananda-demo-change", load); }, []);
   const normalizedQuery = query.toLowerCase();
@@ -41,9 +45,107 @@ export function AdminOperationsView({ view }: { view: View }) {
   const filteredAttendance = useMemo(() => attendance.filter((item) => [item.customerName, item.sessionId, item.status].join(" ").toLowerCase().includes(normalizedQuery)), [attendance, normalizedQuery]);
   const count = view === "memberships" ? filteredMemberships.length : view === "bookings" ? filteredBookings.length : view === "payments" ? filteredPayments.length : view === "refunds" ? filteredRefunds.length : filteredAttendance.length;
 
+  function handleExportPayments() {
+    if (filteredPayments.length === 0) {
+      setExportNotice("There is no data available to export.");
+      setTimeout(() => setExportNotice(null), 3000);
+      return;
+    }
+
+    const columns: CsvColumn<OperationalPayment>[] = [
+      { header: "Payment ID", accessor: (p) => p.id },
+      { header: "Customer Name", accessor: (p) => p.customerName },
+      { header: "Customer Email", accessor: (p) => customers.find((c) => c.id === p.customerId)?.email ?? "" },
+      { header: "Booking ID", accessor: (p) => p.referenceId ?? "" },
+      { header: "Session/Class Name", accessor: (p) => p.description },
+      { header: "Payment Method", accessor: (p) => p.method },
+      { header: "Amount", accessor: (p) => `₹${p.amount}` },
+      { header: "Payment Status", accessor: (p) => p.status },
+      { header: "Transaction Reference", accessor: (p) => p.referenceId ?? p.id },
+      { header: "Payment Date", accessor: (p) => date(p.createdAt) },
+      { header: "Refund Amount", accessor: (p) => (p.status === "refunded" ? `₹${p.amount}` : "₹0") },
+      { header: "Net Amount", accessor: (p) => (p.status === "refunded" ? "₹0" : `₹${p.amount}`) },
+    ];
+
+    const result = exportToCsv("payments", columns, filteredPayments);
+    if (!result.success && result.message) {
+      setExportNotice(result.message);
+      setTimeout(() => setExportNotice(null), 3000);
+    }
+  }
+
+  function handleExportRefunds() {
+    if (filteredRefunds.length === 0) {
+      setExportNotice("There is no data available to export.");
+      setTimeout(() => setExportNotice(null), 3000);
+      return;
+    }
+
+    const columns: CsvColumn<OperationalRefund>[] = [
+      { header: "Refund Request ID", accessor: (r) => r.id },
+      { header: "Booking ID", accessor: (r) => r.bookingId ?? r.paymentId },
+      { header: "Customer Name", accessor: (r) => r.customerName },
+      { header: "Customer Email", accessor: (r) => customers.find((c) => c.id === r.customerId)?.email ?? "" },
+      { header: "Session/Class Name", accessor: (r) => r.className ?? "Yoga Session" },
+      {
+        header: "Session Date",
+        accessor: (r) => {
+          const b = bookings.find((item) => item.id === r.bookingId);
+          return b ? formatSessionDate(b.startsAt) : "";
+        },
+      },
+      {
+        header: "Session Time",
+        accessor: (r) => {
+          const b = bookings.find((item) => item.id === r.bookingId);
+          return b ? formatSessionTime(b.startsAt) : "";
+        },
+      },
+      { header: "Refund Amount", accessor: (r) => `₹${r.amount}` },
+      { header: "Refund Status", accessor: (r) => r.status },
+      { header: "Reason", accessor: (r) => r.reason },
+      { header: "Requested At", accessor: (r) => date(r.requestedAt) },
+      { header: "Processed At", accessor: (r) => (r.processedAt ? date(r.processedAt) : "") },
+      { header: "Processed By", accessor: (r) => r.processedBy ?? "Studio Admin" },
+      { header: "Admin Note", accessor: (r) => r.adminNote ?? "" },
+    ];
+
+    const result = exportToCsv("refunds", columns, filteredRefunds);
+    if (!result.success && result.message) {
+      setExportNotice(result.message);
+      setTimeout(() => setExportNotice(null), 3000);
+    }
+  }
+
   return <>
     <DashboardPageHeader eyebrow={copy[view].eyebrow} title={copy[view].title} copy={copy[view].description} />
-    <div className="mb-5 flex flex-col gap-3 rounded-[1.25rem] border border-[#17362d]/10 bg-white p-4 sm:flex-row sm:items-center sm:justify-between"><div className="relative w-full sm:max-w-sm"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#738078]" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${view}`} className="h-11 rounded-full border-[#17362d]/15 bg-[#f7f8f6] pl-10" /></div><p className="text-sm font-semibold text-[#65756e]">{count} records</p></div>
+    {exportNotice && (
+      <div className="mb-4 flex items-center gap-2 rounded-xl border border-[#a65f3d]/20 bg-[#fbf0e9] p-4 text-sm font-semibold text-[#8b4a2e]">
+        <AlertCircle className="size-5 shrink-0 text-[#a65f3d]" />
+        {exportNotice}
+      </div>
+    )}
+    <div className="mb-5 flex flex-col gap-3 rounded-[1.25rem] border border-[#17362d]/10 bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative w-full sm:max-w-sm">
+        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#738078]" />
+        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${view}`} className="h-11 rounded-full border-[#17362d]/15 bg-[#f7f8f6] pl-10" />
+      </div>
+      <div className="flex items-center gap-3">
+        {(view === "payments" || view === "refunds") && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={view === "payments" ? handleExportPayments : handleExportRefunds}
+            disabled={count === 0}
+            className="h-11 rounded-full border-[#17362d]/15 bg-white px-5 font-semibold text-[#17362d] hover:bg-[#edf0e9] disabled:opacity-50"
+          >
+            <Download className="mr-2 size-4 text-[#a65f3d]" />
+            Export CSV
+          </Button>
+        )}
+        <p className="text-sm font-semibold text-[#65756e]">{count} records</p>
+      </div>
+    </div>
 
     {view === "memberships" && <div className="grid gap-3">{filteredMemberships.map((item) => <article key={item.id} className="rounded-[1.25rem] border border-[#17362d]/10 bg-white p-5"><div className="grid gap-4 sm:grid-cols-[1fr_auto] sm:items-center"><div className="flex gap-4"><span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#e7ecea] text-[#3e5a62]"><WalletCards className="size-5" /></span><div><div className="flex flex-wrap items-center gap-2"><h2 className="font-display text-2xl">{item.customerName}</h2><span className={`rounded-full px-2.5 py-1 text-[11px] font-bold capitalize ${statusTone(item.status)}`}>{item.status}</span></div><p className="mt-1 text-sm font-semibold">{item.planName} · ₹{item.amount.toLocaleString("en-IN")}</p><p className="mt-1 text-xs text-[#65756e]">{new Date(item.startsAt).toLocaleDateString("en-IN")} – {new Date(item.endsAt).toLocaleDateString("en-IN")}</p></div></div><NativeSelect value={item.status} onChange={(event) => updateOperationStatus("memberships", item.id, event.target.value)} className="h-10 w-full rounded-full border-[#17362d]/15 bg-white sm:w-36"><NativeSelectOption value="active">Active</NativeSelectOption><NativeSelectOption value="paused">Paused</NativeSelectOption><NativeSelectOption value="expired">Expired</NativeSelectOption></NativeSelect></div></article>)}</div>}
 

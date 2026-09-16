@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, BellRing, CalendarCheck, CalendarDays, ClipboardCheck, ContactRound, CreditCard, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, UsersRound, WalletCards } from "lucide-react";
+import { BarChart3, BellRing, CalendarCheck, CalendarDays, ClipboardCheck, ContactRound, CreditCard, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, Sparkles, UsersRound, WalletCards } from "lucide-react";
 import { DashboardNavLink } from "@/components/shared/dashboard-nav-link";
 import { DemoIndicator } from "@/components/shared/demo-indicator";
 import { Footer } from "@/components/shared/footer";
@@ -25,7 +25,8 @@ const navGroups: { label: string; items: AdminNavItem[] }[] = [
     { href: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
     { href: "/admin/customers", label: "Customers", icon: ContactRound },
     { href: "/admin/instructors", label: "Instructors", icon: UsersRound },
-    { href: "/admin/classes", label: "Sessions", icon: CalendarDays, aliases: ["/admin/sessions"] },
+    { href: "/admin/classes", label: "Classes", icon: Sparkles },
+    { href: "/admin/sessions", label: "Sessions", icon: CalendarDays },
     { href: "/admin/categories", label: "Categories", icon: FolderTree },
     { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
     { href: "/admin/plans", label: "Plans", icon: WalletCards },

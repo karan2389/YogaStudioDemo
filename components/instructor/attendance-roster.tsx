@@ -7,6 +7,7 @@ import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-heade
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { formatSessionFullDate, formatSessionTimeRange } from "@/lib/date-time";
 import type { Customer, Session, YogaClass } from "@/types/domain";
 import type { DemoAttendanceRecord, DemoPromotionRecord } from "@/types/demo";
 import { getDemoAttendance, getDemoPromotions, markDemoAttendance } from "@/services/demo-storage";
@@ -43,7 +44,7 @@ export function AttendanceRoster({ yogaSession, yogaClass, roster }: { yogaSessi
 
   return <>
     <Link href="/instructor/sessions" className="mb-5 inline-flex items-center gap-2 text-sm font-bold text-[#65756e] hover:text-[#17362d]"><ArrowLeft className="size-4" /> Assigned sessions</Link>
-    <DashboardPageHeader eyebrow="Attendance roster" title={yogaClass.name} copy={`${new Date(yogaSession.startsAt).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", timeZone: "Asia/Kolkata" })} at ${new Date(yogaSession.startsAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })} · ${roster.length} booked students`} action={!complete ? <Button variant="outline" className="rounded-full bg-white" onClick={markRemainingAbsent}>Mark remaining absent</Button> : <span className="inline-flex items-center gap-2 rounded-full bg-[#deeee3] px-4 py-2 text-sm font-bold text-[#315744]"><CheckCircle2 className="size-4" /> Roster complete</span>} />
+    <DashboardPageHeader eyebrow="Attendance roster" title={yogaClass.name} copy={`${formatSessionFullDate(yogaSession.date || yogaSession.startsAt)} · ${formatSessionTimeRange(yogaSession.startTime || yogaSession.startsAt, yogaSession.endTime, yogaClass.durationMinutes)} · ${roster.length} booked students`} action={!complete ? <Button variant="outline" className="rounded-full bg-white" onClick={markRemainingAbsent}>Mark remaining absent</Button> : <span className="inline-flex items-center gap-2 rounded-full bg-[#deeee3] px-4 py-2 text-sm font-bold text-[#315744]"><CheckCircle2 className="size-4" /> Roster complete</span>} />
     {message && <Alert className={`mb-5 rounded-xl ${message.tone === "green" ? "border-[#315744]/20 bg-[#e7f0e8]" : "border-[#a65f3d]/25 bg-[#f6eadc]"}`}><Info className="size-4" /><AlertTitle>{message.title}</AlertTitle><AlertDescription>{message.body}</AlertDescription></Alert>}
     <div className="grid gap-6 xl:grid-cols-[1fr_330px]">
       <section className="overflow-hidden rounded-[1.5rem] border border-[#17362d]/10 bg-white shadow-[0_8px_28px_rgba(36,57,47,0.04)]">

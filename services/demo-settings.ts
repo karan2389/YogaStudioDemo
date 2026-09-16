@@ -7,7 +7,7 @@ const SETTINGS_KEY = "ananda-operations-settings";
 export const defaultStudioSettings: StudioSettings = {
   studioName: "Ananda Yoga Studio", address: "12 Indiranagar Main Road, Bengaluru", phone: "+91 80 4000 2200",
   email: "hello@anandayoga.demo", whatsapp: "+91 90000 22000", bookingCutoffHours: 2, trialPrice: 500,
-  timezone: "Asia/Kolkata", emailEnabled: true, whatsappEnabled: true,
+  timezone: "Asia/Kolkata",
 };
 
 export function getStudioSettings(): StudioSettings {

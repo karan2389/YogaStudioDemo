@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowLeft, Check, CreditCard, IndianRupee, LockKeyhole, Smartphone, WalletCards } from "lucide-react";
+import { AlertCircle, ArrowLeft, CalendarDays, Check, Clock3, CreditCard, IndianRupee, LockKeyhole, Smartphone, UserRound, WalletCards } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDemoSession } from "@/hooks/use-demo-session";
 import { demoAccounts, hasSessionBooking, hasUsedTrial, saveDemoBooking, setDemoSession } from "@/services/demo-storage";
 import { getStudioSettings } from "@/services/demo-settings";
+import { formatSessionFullDate, formatSessionTimeRange } from "@/lib/date-time";
 import type { Instructor, Session, YogaClass } from "@/types/domain";
 
 type BookingType = "single" | "trial";
@@ -72,7 +73,15 @@ export function BookingFlow({ session: classSession, yogaClass, instructor }: { 
           <>
             <button type="button" onClick={() => { setStep("details"); setError(""); }} className="inline-flex items-center gap-2 text-sm text-[#65756e]"><ArrowLeft className="size-4" /> Edit booking</button>
             <div className="mt-5 flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#a65f3d]">Razorpay checkout simulation</p><h1 className="mt-2 font-display text-4xl">Pay ₹{amount}</h1></div><span className="grid size-11 place-items-center rounded-full bg-[#e8ede6] text-[#254d3f]"><LockKeyhole className="size-5" /></span></div>
-            <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentMethod)} className="mt-7 gap-3">
+            <div className="mt-4 rounded-2xl border border-[#17362d]/10 bg-[#f4f7f3] p-4 text-xs">
+              <p className="font-semibold text-sm text-[#17362d]">{yogaClass.name}</p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-[#52665c]">
+                <span className="flex items-center gap-1.5 font-medium"><CalendarDays className="size-3.5 text-[#a65f3d]" />{formatSessionFullDate(classSession.date || classSession.startsAt)}</span>
+                <span className="flex items-center gap-1.5 font-medium text-[#17362d]"><Clock3 className="size-3.5 text-[#a65f3d]" />{formatSessionTimeRange(classSession.startTime || classSession.startsAt, classSession.endTime, yogaClass.durationMinutes)}</span>
+                <span className="flex items-center gap-1.5"><UserRound className="size-3.5 text-[#a65f3d]" />{instructor.name}</span>
+              </div>
+            </div>
+            <RadioGroup value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as PaymentMethod)} className="mt-6 gap-3">
               {[{ value: "upi", label: "UPI", icon: Smartphone, hint: "Demo UPI payment" }, { value: "card", label: "Card", icon: CreditCard, hint: "Demo credit or debit card" }, { value: "wallet", label: "Wallet", icon: WalletCards, hint: "Demo digital wallet" }].map(({ value, label, icon: Icon, hint }) => <label key={value} className={`flex cursor-pointer items-center gap-4 rounded-xl border p-4 ${paymentMethod === value ? "border-[#254d3f] bg-[#f3f6f1]" : "border-[#17362d]/10"}`}><RadioGroupItem value={value} /><Icon className="size-5 text-[#a65f3d]" /><span><strong className="block">{label}</strong><span className="text-xs text-[#738078]">{hint}</span></span></label>)}
             </RadioGroup>
             {error && <div role="alert" className="mt-4 flex gap-3 rounded-xl bg-[#f9e6e3] p-4 text-sm text-[#8b3d32]"><AlertCircle className="size-5 shrink-0" />{error}</div>}

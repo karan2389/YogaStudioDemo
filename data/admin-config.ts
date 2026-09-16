@@ -53,8 +53,8 @@ export const adminResourceConfigs: Record<AdminResource, AdminResourceConfig> = 
     newRecord: () => ({ id: id("ins"), name: "", email: "", phone: "", role: "instructor", specialties: [], experienceYears: 1, bio: "", status: "active" }),
   },
   classes: {
-    resource: "classes", eyebrow: "Studio catalogue", title: "Sessions", singular: "session",
-    copy: "Manage yoga offerings and session templates, instructor assignment, capacity and public pricing.",
+    resource: "classes", eyebrow: "Studio catalogue", title: "Classes", singular: "class",
+    copy: "Manage yoga offerings, style templates, instructor assignment, capacity and public pricing.",
     fields: [
       { key: "name", label: "Session name", type: "text", required: true }, { key: "slug", label: "URL slug", type: "text", required: true },
       { key: "categoryId", label: "Category", type: "select", options: categoryOptions }, { key: "instructorId", label: "Instructor", type: "select", options: instructorOptions },
@@ -80,12 +80,15 @@ export const adminResourceConfigs: Record<AdminResource, AdminResourceConfig> = 
     copy: "Review dated sessions, adjust capacity and keep scheduling status accurate.",
     fields: [
       { key: "classId", label: "Class", type: "select", options: classOptions }, { key: "instructorId", label: "Instructor", type: "select", options: instructorOptions },
-      { key: "startsAt", label: "Date and time", type: "datetime-local", required: true }, { key: "capacity", label: "Capacity", type: "number", required: true },
+      { key: "date", label: "Date", type: "date", required: true },
+      { key: "startTime", label: "Start time", type: "time", required: true },
+      { key: "endTime", label: "End time", type: "time" },
+      { key: "capacity", label: "Capacity", type: "number", required: true },
       { key: "bookedSeats", label: "Booked seats", type: "number", required: true },
       { key: "status", label: "Status", type: "select", options: ["scheduled", "completed", "cancelled"].map((value) => ({ label: value[0].toUpperCase() + value.slice(1), value })) },
     ],
-    titleFor: (record) => className(record.classId), detailsFor: (record) => [new Date(String(record.startsAt)).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" }), instructorName(record.instructorId), `${record.bookedSeats}/${record.capacity} booked`], statusFor: (record) => String(record.status),
-    newRecord: () => ({ id: id("ses"), classId: "class-hatha", instructorId: "ins-nikita", startsAt: "2026-09-21T07:00", capacity: 12, bookedSeats: 0, status: "scheduled" }),
+    titleFor: (record) => className(record.classId), detailsFor: (record) => [String(record.date ?? ""), String(record.startTime ? `${record.startTime}${record.endTime ? ` – ${record.endTime}` : ""}` : new Date(String(record.startsAt)).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })), instructorName(record.instructorId), `${record.bookedSeats}/${record.capacity} booked`], statusFor: (record) => String(record.status),
+    newRecord: () => ({ id: id("ses"), classId: "class-hatha", instructorId: "ins-nikita", date: "2026-09-21", startTime: "07:00", endTime: "08:00", startsAt: "2026-09-21T07:00:00+05:30", capacity: 12, bookedSeats: 0, status: "scheduled" }),
   },
   plans: {
     resource: "plans", eyebrow: "Memberships", title: "Membership plans", singular: "plan",

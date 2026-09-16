@@ -11,7 +11,7 @@ export interface AdminFieldOption {
 export interface AdminField {
   key: string;
   label: string;
-  type: "text" | "email" | "tel" | "number" | "textarea" | "select" | "datetime-local" | "checkbox" | "list";
+  type: "text" | "email" | "tel" | "number" | "textarea" | "select" | "datetime-local" | "date" | "time" | "checkbox" | "list";
   required?: boolean;
   nullable?: boolean;
   options?: AdminFieldOption[];
@@ -90,5 +90,4 @@ export interface OperationalNotification {
 export interface StudioSettings {
   studioName: string; address: string; phone: string; email: string; whatsapp: string;
   bookingCutoffHours: number; trialPrice: number; timezone: string;
-  emailEnabled: boolean; whatsappEnabled: boolean;
 }

@@ -59,10 +59,14 @@ export interface Session {
   id: ID;
   classId: ID;
   instructorId: ID;
-  startsAt: string;
+  date?: string;          // YYYY-MM-DD
+  startTime?: string;     // HH:mm
+  endTime?: string;       // HH:mm, optional
+  startsAt: string;       // ISO 8601
   capacity: number;
   bookedSeats: number;
   status: "scheduled" | "completed" | "cancelled";
+  notes?: string;
 }
 
 export interface Booking {

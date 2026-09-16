@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, CalendarDays, ContactRound, MessageCircle, UsersRound, WalletCards } from "lucide-react";
+import { ArrowRight, CalendarCheck, CalendarDays, ContactRound, MessageCircle, Sparkles, UsersRound, WalletCards } from "lucide-react";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
 import { getAdminCollection } from "@/services/admin-storage";
 import { getOperationalBookings } from "@/services/admin-operations";
@@ -11,7 +11,8 @@ import { getDemoAttendance, getDemoPromotions } from "@/services/demo-storage";
 const shortcuts = [
   { href: "/admin/customers", label: "Customers", copy: "Accounts and membership status", icon: ContactRound, key: "customers" },
   { href: "/admin/instructors", label: "Instructors", copy: "Profiles and specialties", icon: UsersRound, key: "instructors" },
-  { href: "/admin/classes", label: "Sessions", copy: "Offerings, capacity and pricing", icon: CalendarDays, key: "classes" },
+  { href: "/admin/classes", label: "Classes", copy: "Offerings, styles and pricing", icon: Sparkles, key: "classes" },
+  { href: "/admin/sessions", label: "Sessions", copy: "Scheduled timetable & capacity", icon: CalendarDays, key: "sessions" },
   { href: "/admin/bookings", label: "Bookings", copy: "Reservations and refunds", icon: CalendarCheck, key: "bookings" },
   { href: "/admin/plans", label: "Plans", copy: "Public membership offers", icon: WalletCards, key: "plans" },
 ];
@@ -24,6 +25,7 @@ export function AdminOverview() {
         customers: getAdminCollection("customers").length,
         instructors: getAdminCollection("instructors").length,
         classes: getAdminCollection("classes").length,
+        sessions: getAdminCollection("sessions").length,
         bookings: getOperationalBookings().length,
         plans: getAdminCollection("plans").length,
         attendance: getDemoAttendance().length,

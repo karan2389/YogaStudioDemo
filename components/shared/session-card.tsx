@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Clock3, Users } from "lucide-react";
 import type { Instructor, Session, YogaClass } from "@/types/domain";
+import { formatSessionTimeRange } from "@/lib/date-time";
 
 export function SessionCard({ session, yogaClass, instructor }: { session: Session; yogaClass?: YogaClass; instructor?: Instructor }) {
   const date = new Date(session.startsAt);
@@ -17,10 +18,19 @@ export function SessionCard({ session, yogaClass, instructor }: { session: Sessi
           <h3 className="font-display text-xl text-[#17362d]">{yogaClass?.name}</h3>
           <span className="rounded-full bg-[#e8ede6] px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-wider text-[#40604f]">{yogaClass?.difficulty}</span>
         </div>
-        <p className="mt-1 text-sm text-[#65756e]">{instructor?.name}</p>
+        <p className="mt-1 text-sm font-medium text-[#65756e]">Instructor: <span className="text-[#17362d]">{instructor?.name ?? "Lead Instructor"}</span></p>
         <div className="mt-2 flex flex-wrap gap-4 text-sm text-[#5b6d65]">
-          <span className="flex items-center gap-1.5"><Clock3 className="size-4" />{date.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", timeZone: "Asia/Kolkata" })} · {yogaClass?.durationMinutes} min</span>
-          <span className="flex items-center gap-1.5"><Users className="size-4" />{available} seats left</span>
+          <span className="flex items-center gap-1.5 font-medium text-[#17362d]">
+            <Clock3 className="size-4 text-[#a65f3d]" />
+            {formatSessionTimeRange(session.startTime || session.startsAt, session.endTime, yogaClass?.durationMinutes)}
+            {yogaClass?.durationMinutes ? ` (${yogaClass.durationMinutes} min)` : ""}
+          </span>
+          <span className="flex items-center gap-1.5">
+            <Users className="size-4 text-[#738078]" />
+            <span className={available <= 3 ? "font-bold text-[#a65f3d]" : "font-medium"}>
+              {available} seats remaining
+            </span>
+          </span>
         </div>
       </div>
       <div className="col-start-2 flex items-center justify-between gap-4 sm:col-start-auto">
