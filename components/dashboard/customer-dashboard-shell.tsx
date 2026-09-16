@@ -12,7 +12,6 @@ import { useDemoSession } from "@/hooks/use-demo-session";
 import { demoAccounts, setDemoSession } from "@/services/demo-storage";
 
 const nav = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/bookings", label: "My Bookings", icon: CalendarCheck },
   { href: "/dashboard/membership", label: "Membership", icon: WalletCards },
   { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
@@ -36,7 +35,10 @@ export function CustomerDashboardShell({ children }: { children: ReactNode }) {
           <div className="rounded-[1.5rem] bg-[#17362d] p-4 text-white">
             <div className="px-3 py-4"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#dfb77e]">Customer portal</p><p className="mt-2 font-display text-2xl">Hi, {session.name.split(" ")[0]}</p></div>
             <nav aria-label="Customer dashboard" className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:overflow-visible">
-              {nav.map(({ href, label, icon: Icon }) => { const active = pathname === href; return <Link key={href} href={href} className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-[#f8f1e7] text-[#17362d]" : "text-[#c5d2cb] hover:bg-white/8 hover:text-white"}`}><Icon className="size-4" />{label}</Link>; })}
+              {nav.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href || (href === "/dashboard/bookings" && pathname === "/dashboard");
+                return <Link key={href} href={href} className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-sm font-semibold transition ${active ? "bg-[#f8f1e7] text-[#17362d]" : "text-[#c5d2cb] hover:bg-white/8 hover:text-white"}`}><Icon className="size-4" />{label}</Link>;
+              })}
             </nav>
           </div>
         </aside>

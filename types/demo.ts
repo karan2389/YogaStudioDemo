@@ -23,7 +23,8 @@ export interface DemoBookingRecord {
   status: "confirmed" | "cancelled";
   createdAt: string;
   cancelledAt?: string;
-  refundStatus?: "not-applicable" | "refunded";
+  refundStatus?: "not-applicable" | "requested" | "processing" | "completed" | "rejected" | "refunded";
+  refundRequestId?: string;
 }
 
 export interface DemoMembershipRecord {

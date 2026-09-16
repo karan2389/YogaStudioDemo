@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, BellRing, CalendarCheck, CalendarRange, CalendarSearch, ClipboardCheck, ContactRound, CreditCard, Dumbbell, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, UsersRound, WalletCards } from "lucide-react";
+import { BarChart3, BellRing, CalendarCheck, CalendarDays, CalendarRange, CalendarSearch, ClipboardCheck, ContactRound, CreditCard, Dumbbell, FolderTree, LayoutDashboard, LogIn, PanelsTopLeft, RefreshCw, Settings2, UsersRound, WalletCards } from "lucide-react";
 import { DemoIndicator } from "@/components/shared/demo-indicator";
 import { Footer } from "@/components/shared/footer";
 import { Header } from "@/components/shared/header";
@@ -13,16 +13,23 @@ import { demoAccounts, setDemoSession } from "@/services/demo-storage";
 
 const navGroups = [
   { label: "Core", items: [
-    { href: "/admin", label: "Overview", icon: LayoutDashboard }, { href: "/admin/customers", label: "Customers", icon: ContactRound },
-    { href: "/admin/instructors", label: "Instructors", icon: UsersRound }, { href: "/admin/classes", label: "Classes", icon: Dumbbell },
-    { href: "/admin/categories", label: "Categories", icon: FolderTree }, { href: "/admin/schedules", label: "Recurring", icon: CalendarRange },
-    { href: "/admin/sessions", label: "Sessions", icon: CalendarSearch }, { href: "/admin/plans", label: "Plans", icon: WalletCards },
+    { href: "/admin", label: "Overview", icon: LayoutDashboard },
+    { href: "/admin/customers", label: "Customers", icon: ContactRound },
+    { href: "/admin/instructors", label: "Instructors", icon: UsersRound },
+    { href: "/admin/classes", label: "Sessions", icon: CalendarDays },
+    { href: "/admin/categories", label: "Categories", icon: FolderTree },
+    { href: "/admin/schedules", label: "Schedules", icon: CalendarRange },
+    { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
+    { href: "/admin/plans", label: "Plans", icon: WalletCards },
   ] },
   { label: "Operations", items: [
-    { href: "/admin/memberships", label: "Memberships", icon: WalletCards }, { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
-    { href: "/admin/payments", label: "Payments", icon: CreditCard }, { href: "/admin/refunds", label: "Refunds", icon: RefreshCw },
-    { href: "/admin/attendance", label: "Attendance", icon: ClipboardCheck }, { href: "/admin/notifications", label: "Notifications", icon: BellRing },
-    { href: "/admin/reports", label: "Reports", icon: BarChart3 }, { href: "/admin/settings", label: "Settings", icon: Settings2 },
+    { href: "/admin/memberships", label: "Memberships", icon: WalletCards },
+    { href: "/admin/payments", label: "Payments", icon: CreditCard },
+    { href: "/admin/refunds", label: "Refunds", icon: RefreshCw },
+    { href: "/admin/attendance", label: "Attendance", icon: ClipboardCheck },
+    { href: "/admin/notifications", label: "Notifications", icon: BellRing },
+    { href: "/admin/reports", label: "Reports", icon: BarChart3 },
+    { href: "/admin/settings", label: "Settings", icon: Settings2 },
   ] },
 ];
 

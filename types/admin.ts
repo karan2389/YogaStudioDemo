@@ -25,20 +25,61 @@ export interface OperationalMembership {
   status: "active" | "expired" | "paused"; startsAt: string; endsAt: string; amount: number;
 }
 
+export type RefundStatus = "requested" | "processing" | "completed" | "rejected";
+
 export interface OperationalBooking {
-  id: string; customerId: string; customerName: string; sessionId: string; className: string;
-  startsAt: string; type: "single" | "trial" | "membership"; amount: number;
-  status: "confirmed" | "cancelled" | "attended" | "no-show";
+  id: string;
+  customerId: string;
+  customerName: string;
+  customerEmail?: string;
+  customerPhone?: string;
+  sessionId: string;
+  className: string;
+  instructorName?: string;
+  instructorId?: string;
+  startsAt: string;
+  durationMinutes?: number;
+  capacity?: number;
+  type: "single" | "trial" | "membership";
+  amount: number;
+  paymentId?: string;
+  paymentMethod?: string;
+  paymentStatus?: "paid" | "pending" | "failed" | "refunded";
+  status: "confirmed" | "cancelled" | "attended" | "no-show" | "pending";
+  refundStatus?: "none" | "requested" | "processing" | "completed" | "rejected";
+  refundId?: string;
+  createdAt?: string;
+  cancelledAt?: string;
 }
 
 export interface OperationalPayment {
-  id: string; customerId: string; customerName: string; description: string; amount: number;
-  method: string; status: "paid" | "refunded" | "failed"; createdAt: string; referenceId: string;
+  id: string;
+  customerId: string;
+  customerName: string;
+  description: string;
+  amount: number;
+  method: string;
+  status: "paid" | "refunded" | "failed" | "pending";
+  createdAt: string;
+  referenceId: string;
 }
 
 export interface OperationalRefund {
-  id: string; paymentId: string; customerId: string; customerName: string; amount: number;
-  reason: string; status: "requested" | "processing" | "completed" | "rejected"; requestedAt: string;
+  id: string;
+  bookingId?: string;
+  paymentId: string;
+  customerId: string;
+  customerName: string;
+  sessionId?: string;
+  className?: string;
+  amount: number;
+  reason: string;
+  status: RefundStatus;
+  requestedAt: string;
+  processedAt?: string;
+  completedAt?: string;
+  processedBy?: string;
+  adminNote?: string;
 }
 
 export interface OperationalNotification {

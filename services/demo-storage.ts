@@ -1,6 +1,7 @@
 "use client";
 
 import type { DemoAttendanceRecord, DemoAttendanceStatus, DemoBookingRecord, DemoMembershipRecord, DemoNotificationRecord, DemoPaymentRecord, DemoPromotionRecord, DemoSessionState } from "@/types/demo";
+import type { OperationalNotification, OperationalRefund } from "@/types/admin";
 import { getStudioSettings } from "@/services/demo-settings";
 
 const SESSION_KEY = "ananda-demo-session";
@@ -82,16 +83,127 @@ export function canCancelBooking(booking: DemoBookingRecord) {
   return booking.status === "confirmed" && new Date(booking.startsAt).getTime() - Date.now() >= getStudioSettings().bookingCutoffHours * 60 * 60 * 1000;
 }
 
-export function cancelDemoBooking(bookingId: string) {
+export function cancelBookingAndRequestRefund(bookingId: string): {
+  success: boolean;
+  reason?: "not_found" | "too_late" | "already_requested" | "already_cancelled";
+  message: string;
+  status?: string;
+} {
+  if (typeof window === "undefined") {
+    return { success: false, reason: "not_found", message: "Window storage not available." };
+  }
   const bookings = getDemoBookings();
   const booking = bookings.find((item) => item.id === bookingId);
-  if (!booking || !canCancelBooking(booking)) return false;
-  window.localStorage.setItem(BOOKINGS_KEY, JSON.stringify(bookings.map((item) => item.id === bookingId ? { ...item, status: "cancelled", cancelledAt: new Date().toISOString(), refundStatus: "refunded" } : item)));
-  const payments = getDemoPayments().map((payment) => payment.referenceId === bookingId ? { ...payment, status: "refunded" as const } : payment);
-  window.localStorage.setItem(PAYMENTS_KEY, JSON.stringify(payments));
-  addDemoNotification({ customerId: booking.customerId, title: "Booking cancelled", body: `Your ${booking.className} booking was cancelled and ₹${booking.amount} was marked as refunded.`, category: "payment" });
+  if (!booking) {
+    return { success: false, reason: "not_found", message: "Booking not found." };
+  }
+
+  // Duplicate prevention
+  if (booking.status === "cancelled" || booking.refundStatus === "requested" || booking.refundStatus === "processing" || booking.refundStatus === "completed") {
+    return {
+      success: false,
+      reason: "already_requested",
+      message: "A refund request already exists for this booking.",
+      status: booking.refundStatus ?? "requested",
+    };
+  }
+
+  // 2-hour cutoff check
+  if (!canCancelBooking(booking)) {
+    return {
+      success: false,
+      reason: "too_late",
+      message: "This session cannot be cancelled online because it starts within the 2-hour cancellation window.",
+    };
+  }
+
+  const now = new Date().toISOString();
+  const refundId = `ref-${booking.id.replace("book-", "")}`;
+
+  // 1. Update Booking
+  const updatedBookings = bookings.map((item) =>
+    item.id === bookingId
+      ? {
+          ...item,
+          status: "cancelled" as const,
+          cancelledAt: now,
+          refundStatus: "requested" as const,
+          refundRequestId: refundId,
+        }
+      : item
+  );
+  window.localStorage.setItem(BOOKINGS_KEY, JSON.stringify(updatedBookings));
+
+  // 2. Create Refund Request Record in Operations
+  const refundRecord = {
+    id: refundId,
+    bookingId: booking.id,
+    paymentId: booking.paymentId,
+    customerId: booking.customerId,
+    customerName: booking.customerName,
+    sessionId: booking.sessionId,
+    className: booking.className,
+    amount: booking.amount,
+    reason: "Eligible booking cancellation",
+    status: "requested",
+    requestedAt: now,
+    adminNote: "Submitted via customer self-service cancellation",
+  };
+
+  const storedRefunds = window.localStorage.getItem("ananda-operations-refunds");
+  let currentRefunds: OperationalRefund[] = [];
+  if (storedRefunds) {
+    try { currentRefunds = JSON.parse(storedRefunds); } catch { currentRefunds = []; }
+  }
+  window.localStorage.setItem(
+    "ananda-operations-refunds",
+    JSON.stringify([refundRecord, ...currentRefunds.filter((r) => r.id !== refundId && r.bookingId !== booking.id)])
+  );
+
+  // 3. Admin Notification
+  const formattedDate = new Date(booking.startsAt).toLocaleString("en-IN", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Asia/Kolkata",
+  });
+  const adminNotice: OperationalNotification = {
+    id: `camp-refund-${Date.now().toString(36).toUpperCase()}`,
+    audience: "Studio Admin",
+    customerId: booking.customerId,
+    title: "New refund request received",
+    body: `New refund request received from ${booking.customerName} for ${booking.className} on ${formattedDate}. Amount: ₹${booking.amount}.`,
+    channel: "in-app",
+    status: "sent",
+    createdAt: now,
+  };
+  const storedNotices = window.localStorage.getItem("ananda-operations-notifications");
+  let currentNotices: OperationalNotification[] = [];
+  if (storedNotices) {
+    try { currentNotices = JSON.parse(storedNotices); } catch { currentNotices = []; }
+  }
+  window.localStorage.setItem(
+    "ananda-operations-notifications",
+    JSON.stringify([adminNotice, ...currentNotices])
+  );
+
+  // 4. Customer Notification
+  addDemoNotification({
+    customerId: booking.customerId,
+    title: "Cancellation & refund request submitted",
+    body: `Your booking for ${booking.className} has been cancelled and your refund request of ₹${booking.amount} has been sent to the studio admin.`,
+    category: "payment",
+  });
+
   notify();
-  return true;
+  return {
+    success: true,
+    message: "Your booking has been cancelled and your refund request has been sent to the studio admin.",
+    status: "requested",
+  };
+}
+
+export function cancelDemoBooking(bookingId: string) {
+  return cancelBookingAndRequestRefund(bookingId).success;
 }
 
 export function getDemoMemberships(): DemoMembershipRecord[] {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronDown, ClipboardCheck, LayoutDashboard, LogOut, ShieldCheck, UserRound } from "lucide-react";
+import { CalendarCheck, ChevronDown, ClipboardCheck, LogOut, ShieldCheck, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -39,7 +39,7 @@ export function DemoAccountMenu({ mobile = false }: { mobile?: boolean }) {
       <DropdownMenuContent align="end" className="w-64 rounded-xl border-[#17362d]/10 bg-white p-2">
         <DropdownMenuLabel><span className="block truncate">{session.name}</span><span className="text-xs font-normal capitalize text-[#738078]">Demo {session.role}</span></DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {session.role === "customer" && <><DropdownMenuItem asChild className="rounded-lg"><Link href="/dashboard"><LayoutDashboard className="size-4" />Customer dashboard</Link></DropdownMenuItem><DropdownMenuSeparator /></>}
+        {session.role === "customer" && <><DropdownMenuItem asChild className="rounded-lg"><Link href="/dashboard/bookings"><CalendarCheck className="size-4" />My bookings</Link></DropdownMenuItem><DropdownMenuSeparator /></>}
         {session.role === "instructor" && <><DropdownMenuItem asChild className="rounded-lg"><Link href="/instructor"><ClipboardCheck className="size-4" />Instructor workspace</Link></DropdownMenuItem><DropdownMenuSeparator /></>}
         {session.role === "admin" && <><DropdownMenuItem asChild className="rounded-lg"><Link href="/admin"><ShieldCheck className="size-4" />Admin control centre</Link></DropdownMenuItem><DropdownMenuSeparator /></>}
         <DropdownMenuLabel className="text-xs uppercase tracking-wider text-[#738078]">Switch demo role</DropdownMenuLabel>

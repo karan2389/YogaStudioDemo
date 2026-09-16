@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { AdminResourceManager } from "@/components/admin/admin-resource-manager";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Manage Sessions | Ananda Yoga Demo" };
-export default function AdminSessionsPage() { return <AdminResourceManager resource="sessions" />; }
+export default function AdminSessionsPage() {
+  redirect("/admin/bookings");
+}

@@ -18,7 +18,7 @@ export function LoginPanel() {
 
   function enter(account: (typeof demoAccounts)[number]) {
     setDemoSession(account);
-    router.push(account.role === "customer" ? "/dashboard" : account.role === "instructor" ? "/instructor" : "/admin");
+    router.push(account.role === "customer" ? "/dashboard/bookings" : account.role === "instructor" ? "/instructor" : "/admin");
   }
 
   function verify() {
