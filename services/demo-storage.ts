@@ -1,7 +1,7 @@
 "use client";
 
 import type { DemoAttendanceRecord, DemoAttendanceStatus, DemoBookingRecord, DemoMembershipRecord, DemoNotificationRecord, DemoPaymentRecord, DemoPromotionRecord, DemoSessionState } from "@/types/demo";
-import type { OperationalNotification, OperationalRefund } from "@/types/admin";
+import type { OperationalNotification } from "@/types/admin";
 import { getStudioSettings } from "@/services/demo-settings";
 
 const SESSION_KEY = "ananda-demo-session";

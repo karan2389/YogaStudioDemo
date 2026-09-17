@@ -235,7 +235,7 @@ export function BookingsView() {
               </article>
             );
           })
-        ) : (
+        )) : (
           <div className="rounded-[1.5rem] border border-dashed border-[#17362d]/20 bg-white p-10 text-center">
             <CalendarDays className="mx-auto size-7 text-[#a65f3d]" />
             <h2 className="mt-4 font-display text-3xl">No bookings yet.</h2>
