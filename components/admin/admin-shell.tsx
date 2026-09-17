@@ -27,6 +27,7 @@ const navGroups: { label: string; items: AdminNavItem[] }[] = [
     { href: "/admin/instructors", label: "Instructors", icon: UsersRound },
     { href: "/admin/classes", label: "Classes", icon: Sparkles },
     { href: "/admin/sessions", label: "Sessions", icon: CalendarDays },
+    { href: "/admin/recurring-sessions", label: "Recurring Sessions", icon: CalendarDays },
     { href: "/admin/categories", label: "Categories", icon: FolderTree },
     { href: "/admin/bookings", label: "Bookings", icon: CalendarCheck },
     { href: "/admin/plans", label: "Plans", icon: WalletCards },
@@ -34,7 +35,6 @@ const navGroups: { label: string; items: AdminNavItem[] }[] = [
   { label: "Operations", items: [
     { href: "/admin/memberships", label: "Memberships", icon: WalletCards },
     { href: "/admin/payments", label: "Payments", icon: CreditCard },
-    { href: "/admin/refunds", label: "Refunds", icon: RefreshCw },
     { href: "/admin/attendance", label: "Attendance", icon: ClipboardCheck },
     { href: "/admin/notifications", label: "Notifications", icon: BellRing },
     { href: "/admin/reports", label: "Reports", icon: BarChart3 },

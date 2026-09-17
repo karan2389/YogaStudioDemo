@@ -2,7 +2,7 @@
 
 import { customers } from "@/data/mock-data";
 import { addDemoNotification, cancelDemoBooking, getDemoBookings, getDemoMemberships, getDemoNotifications, getDemoPayments } from "@/services/demo-storage";
-import type { AdminOperation, OperationalBooking, OperationalMembership, OperationalNotification, OperationalPayment, OperationalRefund } from "@/types/admin";
+import type { AdminOperation, OperationalBooking, OperationalMembership, OperationalNotification, OperationalPayment } from "@/types/admin";
 import type { DemoBookingRecord } from "@/types/demo";
 
 export { getStudioSettings, saveStudioSettings } from "@/services/demo-settings";
@@ -98,7 +98,6 @@ const bookingSeeds: OperationalBooking[] = [
     paymentMethod: "UPI",
     paymentStatus: "paid",
     status: "confirmed",
-    refundStatus: "none",
     createdAt: "2026-09-15T11:00:00+05:30",
   },
   {
@@ -230,7 +229,6 @@ const bookingSeeds: OperationalBooking[] = [
     paymentMethod: "UPI",
     paymentStatus: "failed",
     status: "pending",
-    refundStatus: "none",
     createdAt: "2026-09-16T14:00:00+05:30",
   },
 ];
@@ -248,71 +246,6 @@ const paymentSeeds: OperationalPayment[] = [
   { id: "pay-kavita-1", customerId: "cus-kavita", customerName: "Kavita Rao", description: "Beginner Yoga · Single session", amount: 500, method: "UPI", status: "failed", createdAt: "2026-09-16T14:00:00+05:30", referenceId: "book-kavita-pending" },
 ];
 
-const refundSeeds: OperationalRefund[] = [
-  {
-    id: "ref-priya-1",
-    bookingId: "book-priya-1",
-    paymentId: "pay-priya-1",
-    customerId: "cus-priya",
-    customerName: "Priya Singh",
-    sessionId: "ses-4",
-    className: "Power Yoga",
-    amount: 800,
-    reason: "Eligible booking cancellation",
-    status: "requested",
-    requestedAt: "2026-09-15T09:30:00+05:30",
-    adminNote: "Customer cancelled well outside 2-hour window",
-  },
-  {
-    id: "ref-rohit-1",
-    bookingId: "book-rohit-processing",
-    paymentId: "pay-rohit-1",
-    customerId: "cus-rohit",
-    customerName: "Rohit Patel",
-    sessionId: "ses-5",
-    className: "Pranayama & Breathwork",
-    amount: 550,
-    reason: "Medical appointment reschedule",
-    status: "processing",
-    requestedAt: "2026-09-14T12:00:00+05:30",
-    processedAt: "2026-09-15T10:00:00+05:30",
-    processedBy: "Studio Admin",
-    adminNote: "Verifying UPI reference with banking portal",
-  },
-  {
-    id: "ref-neha-1",
-    bookingId: "book-neha-completed",
-    paymentId: "pay-neha-1",
-    customerId: "cus-neha",
-    customerName: "Neha Nair",
-    sessionId: "ses-past-3",
-    className: "Mobility & Stretching",
-    amount: 600,
-    reason: "Travel delay cancellation",
-    status: "completed",
-    requestedAt: "2026-09-10T11:30:00+05:30",
-    processedAt: "2026-09-11T09:00:00+05:30",
-    completedAt: "2026-09-11T16:45:00+05:30",
-    processedBy: "Studio Admin",
-    adminNote: "Card gateway refund transaction TRX-99812",
-  },
-  {
-    id: "ref-vikram-1",
-    bookingId: "book-vikram-rejected",
-    paymentId: "pay-vikram-1",
-    customerId: "cus-vikram",
-    customerName: "Vikram Malhotra",
-    sessionId: "ses-6",
-    className: "Mobility & Stretching",
-    amount: 600,
-    reason: "Late cancellation",
-    status: "rejected",
-    requestedAt: "2026-09-15T16:00:00+05:30",
-    processedAt: "2026-09-15T16:30:00+05:30",
-    processedBy: "Studio Admin",
-    adminNote: "Cancelled within 45 mins of class; studio 2-hr cutoff policy applies",
-  },
-];
 
 const notificationSeeds: OperationalNotification[] = [
   { id: "camp-schedule", audience: "All customers", title: "Weekend schedule is open", body: "New weekend sessions are ready to book.", channel: "in-app", status: "sent", createdAt: "2026-09-14T11:00:00+05:30" },
@@ -342,12 +275,10 @@ export function getOperationalMemberships(): OperationalMembership[] {
 }
 
 export function getOperationalBookings(): OperationalBooking[] {
-  const storedRefunds = getOperationalRefunds();
   const storedPayments = getOperationalPayments();
   
   const dynamic = getDemoBookings().map((item) => {
     const customer = customers.find((c) => c.id === item.customerId);
-    const refund = storedRefunds.find((r) => r.bookingId === item.id || r.paymentId === item.paymentId);
     const payment = storedPayments.find((p) => p.referenceId === item.id || p.id === item.paymentId);
 
     return {
@@ -368,21 +299,16 @@ export function getOperationalBookings(): OperationalBooking[] {
       paymentMethod: item.paymentMethod.toUpperCase(),
       paymentStatus: payment?.status ?? "paid",
       status: item.status,
-      refundStatus: refund?.status ?? (item.refundStatus === "requested" ? "requested" : item.refundStatus === "processing" ? "processing" : item.refundStatus === "completed" || item.refundStatus === "refunded" ? "completed" : item.refundStatus === "rejected" ? "rejected" : "none"),
-      refundId: refund?.id ?? item.refundRequestId,
       createdAt: item.createdAt,
       cancelledAt: item.cancelledAt,
     } as OperationalBooking;
   });
 
   const baseEnriched = read("bookings", bookingSeeds).map((seed) => {
-    const refund = storedRefunds.find((r) => r.bookingId === seed.id || r.paymentId === seed.paymentId);
     const payment = storedPayments.find((p) => p.referenceId === seed.id || p.id === seed.paymentId);
     return {
       ...seed,
       paymentStatus: payment?.status ?? seed.paymentStatus ?? "paid",
-      refundStatus: refund?.status ?? seed.refundStatus ?? "none",
-      refundId: refund?.id ?? seed.refundId,
     };
   });
 
@@ -404,9 +330,6 @@ export function getOperationalPayments(): OperationalPayment[] {
   return mergeById(read("payments", paymentSeeds), dynamic);
 }
 
-export function getOperationalRefunds(): OperationalRefund[] {
-  return read("refunds", refundSeeds);
-}
 
 export function getOperationalNotifications(): OperationalNotification[] {
   const dynamic = getDemoNotifications().map((item) => ({ id: item.id, audience: customers.find((customer) => customer.id === item.customerId)?.name ?? item.customerId, customerId: item.customerId, title: item.title, body: item.body, channel: "in-app" as const, status: "sent" as const, createdAt: item.createdAt }));
@@ -427,90 +350,6 @@ export function updateOperationalBookingStatus(id: string, status: OperationalBo
   updateOperationStatus("bookings", id, status);
 }
 
-export function advanceRefund(id: string, adminNote?: string) {
-  const refunds = getOperationalRefunds();
-  const target = refunds.find((item) => item.id === id);
-  if (!target) return;
-  const next = target.status === "requested" ? "processing" : target.status === "processing" ? "completed" : target.status;
-  const now = new Date().toISOString();
-
-  const updatedRefunds = refunds.map((item) => {
-    if (item.id !== id) return item;
-    return {
-      ...item,
-      status: next,
-      adminNote: adminNote !== undefined ? adminNote : item.adminNote,
-      processedAt: next === "processing" ? now : item.processedAt,
-      completedAt: next === "completed" ? now : item.completedAt,
-      processedBy: "Studio Admin",
-    };
-  });
-  write("refunds", updatedRefunds);
-
-  // Sync related booking
-  const bookingId = target.bookingId;
-  if (bookingId) {
-    const operationalBookings = getOperationalBookings().map((b) =>
-      b.id === bookingId ? { ...b, refundStatus: next as OperationalBooking["refundStatus"] } : b
-    );
-    write("bookings", operationalBookings);
-
-    if (typeof window !== "undefined") {
-      const demoBookings = getDemoBookings();
-      if (demoBookings.some((b) => b.id === bookingId)) {
-        window.localStorage.setItem(
-          "ananda-demo-bookings",
-          JSON.stringify(demoBookings.map((b) => (b.id === bookingId ? { ...b, refundStatus: next as DemoBookingRecord["refundStatus"] } : b)))
-        );
-      }
-    }
-  }
-
-  // If completed, update payment status to refunded
-  if (next === "completed") {
-    write("payments", getOperationalPayments().map((item) => item.id === target.paymentId || item.referenceId === target.bookingId ? { ...item, status: "refunded" as const } : item));
-    if (typeof window !== "undefined") {
-      const demoPayments = getDemoPayments();
-      window.localStorage.setItem(
-        "ananda-demo-payments",
-        JSON.stringify(demoPayments.map((p) => (p.referenceId === target.bookingId || p.id === target.paymentId ? { ...p, status: "refunded" as const } : p)))
-      );
-    }
-    addDemoNotification({ customerId: target.customerId, title: "Refund completed", body: `Your demo refund of ₹${target.amount} has been completed.`, category: "payment" });
-  } else if (next === "processing") {
-    addDemoNotification({ customerId: target.customerId, title: "Refund under review", body: `Your refund request for ₹${target.amount} is currently being processed by the studio admin.`, category: "payment" });
-  }
-}
-
-export function rejectRefund(id: string, adminNote?: string) {
-  const refunds = getOperationalRefunds();
-  const target = refunds.find((item) => item.id === id);
-  if (!target) return;
-  const now = new Date().toISOString();
-
-  write("refunds", refunds.map((item) => item.id === id ? { ...item, status: "rejected" as const, adminNote: adminNote !== undefined ? adminNote : item.adminNote, processedAt: now, processedBy: "Studio Admin" } : item));
-
-  if (target.bookingId) {
-    const operationalBookings = getOperationalBookings().map((b) =>
-      b.id === target.bookingId ? { ...b, refundStatus: "rejected" as const } : b
-    );
-    write("bookings", operationalBookings);
-    if (typeof window !== "undefined") {
-      const demoBookings = getDemoBookings();
-      window.localStorage.setItem(
-        "ananda-demo-bookings",
-        JSON.stringify(demoBookings.map((b) => (b.id === target.bookingId ? { ...b, refundStatus: "rejected" as const } : b)))
-      );
-    }
-  }
-
-  addDemoNotification({ customerId: target.customerId, title: "Refund request update", body: `Your refund request for ₹${target.amount} was reviewed and could not be approved.`, category: "payment" });
-}
-
-export function updateRefundNote(id: string, adminNote: string) {
-  const refunds = getOperationalRefunds();
-  write("refunds", refunds.map((item) => item.id === id ? { ...item, adminNote } : item));
-}
 
 export function sendOperationalNotification(input: Omit<OperationalNotification, "id" | "status" | "createdAt">) {
   const item: OperationalNotification = { ...input, id: `CAMP-${Date.now().toString(36).toUpperCase()}`, status: "sent", createdAt: new Date().toISOString() };
@@ -532,6 +371,5 @@ export function getOperationCount(operation: AdminOperation) {
   if (operation === "memberships") return getOperationalMemberships().length;
   if (operation === "bookings") return getOperationalBookings().length;
   if (operation === "payments") return getOperationalPayments().length;
-  if (operation === "refunds") return getOperationalRefunds().length;
   return getOperationalNotifications().length;
 }

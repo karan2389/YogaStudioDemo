@@ -49,7 +49,10 @@ export function BookingFlow({ session: classSession, yogaClass, instructor }: { 
   function completePayment() {
     if (!session) return;
     const seed = Date.now().toString(36).toUpperCase();
-    saveDemoBooking({ id: `BK-${seed}`, customerId: session.id, customerName: session.name, sessionId: classSession.id, className: yogaClass.name, instructorName: instructor.name, startsAt: classSession.startsAt, bookingType, amount, paymentMethod, paymentId: `PAY-${seed}`, status: "confirmed", createdAt: new Date().toISOString() });
+    const pct = instructor.payrollPercentage ?? 60;
+    const payroll = Math.round((amount * pct) / 100);
+    const studio = amount - payroll;
+    saveDemoBooking({ id: `BK-${seed}`, customerId: session.id, customerName: session.name, sessionId: classSession.id, className: yogaClass.name, instructorName: instructor.name, startsAt: classSession.startsAt, bookingType, amount, paymentMethod, paymentId: `PAY-${seed}`, status: "confirmed", createdAt: new Date().toISOString(), payrollPercentageSnapshot: pct, instructorPayrollAmount: payroll, studioShare: studio });
     router.push("/booking-confirmation");
   }
 

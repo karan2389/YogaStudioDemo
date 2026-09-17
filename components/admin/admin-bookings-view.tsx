@@ -46,27 +46,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  advanceRefund,
   getOperationalBookings,
   getOperationalPayments,
-  getOperationalRefunds,
-  rejectRefund,
   updateOperationalBookingStatus,
-  updateRefundNote,
 } from "@/services/admin-operations";
 import { customers, instructors, yogaClasses } from "@/data/mock-data";
-import type { OperationalBooking, OperationalRefund } from "@/types/admin";
+import type { OperationalBooking } from "@/types/admin";
 
 export function AdminBookingsView() {
   const [bookings, setBookings] = useState<OperationalBooking[]>([]);
-  const [refunds, setRefunds] = useState<OperationalRefund[]>([]);
   const [selectedBookingId, setSelectedBookingId] = useState<string | null>(null);
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
-  const [refundFilter, setRefundFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
   const [instructorFilter, setInstructorFilter] = useState("all");
@@ -77,20 +71,10 @@ export function AdminBookingsView() {
   const [sortField, setSortField] = useState<"createdAt" | "startsAt" | "amount" | "customerName">("startsAt");
   const [sortAsc, setSortAsc] = useState(false);
 
-  // Note editing in modal
-  const [adminNoteInput, setAdminNoteInput] = useState("");
-  const [confirmAction, setConfirmAction] = useState<{
-    type: "complete" | "reject";
-    refundId: string;
-    bookingId: string;
-    amount: number;
-    customerName: string;
-  } | null>(null);
 
   useEffect(() => {
     const load = () => {
       setBookings(getOperationalBookings());
-      setRefunds(getOperationalRefunds());
     };
     load();
     window.addEventListener("ananda-demo-change", load);
@@ -120,14 +104,6 @@ export function AdminBookingsView() {
 
     const pendingPayments = bookings.filter((b) => b.paymentStatus === "pending" || b.paymentStatus === "failed").length;
 
-    const refundRequests = refunds.filter((r) => r.status === "requested" || r.status === "processing").length;
-    const totalRefundRequested = refunds
-      .filter((r) => r.status === "requested" || r.status === "processing")
-      .reduce((sum, r) => sum + r.amount, 0);
-    const totalCompletedRefunds = refunds
-      .filter((r) => r.status === "completed")
-      .reduce((sum, r) => sum + r.amount, 0);
-
     return {
       total: bookings.length,
       confirmed,
@@ -136,11 +112,8 @@ export function AdminBookingsView() {
       upcoming,
       totalReceived,
       pendingPayments,
-      refundRequests,
-      totalRefundRequested,
-      totalCompletedRefunds,
     };
-  }, [bookings, refunds]);
+  }, [bookings]);
 
   // Filtered & Sorted items
   const filteredBookings = useMemo(() => {
@@ -159,7 +132,6 @@ export function AdminBookingsView() {
             item.className,
             item.instructorName,
             item.paymentId,
-            item.refundId,
           ]
             .filter(Boolean)
             .join(" ")
@@ -173,12 +145,6 @@ export function AdminBookingsView() {
         // Payment status filter
         if (paymentFilter !== "all" && item.paymentStatus !== paymentFilter) return false;
 
-        // Refund status filter
-        if (refundFilter !== "all") {
-          const currentRefund = item.refundStatus ?? "none";
-          if (refundFilter === "not-requested" && currentRefund !== "none") return false;
-          if (refundFilter !== "not-requested" && currentRefund !== refundFilter) return false;
-        }
 
         // Booking type filter
         if (typeFilter !== "all" && item.type !== typeFilter) return false;
@@ -215,7 +181,6 @@ export function AdminBookingsView() {
     searchQuery,
     statusFilter,
     paymentFilter,
-    refundFilter,
     typeFilter,
     classFilter,
     instructorFilter,
@@ -230,28 +195,11 @@ export function AdminBookingsView() {
     return bookings.find((b) => b.id === selectedBookingId) ?? null;
   }, [bookings, selectedBookingId]);
 
-  const selectedRefund = useMemo(() => {
-    if (!selectedBooking) return null;
-    return (
-      refunds.find(
-        (r) => r.bookingId === selectedBooking.id || (selectedBooking.paymentId && r.paymentId === selectedBooking.paymentId)
-      ) ?? null
-    );
-  }, [selectedBooking, refunds]);
-
-  useEffect(() => {
-    if (selectedRefund) {
-      setAdminNoteInput(selectedRefund.adminNote ?? "");
-    } else {
-      setAdminNoteInput("");
-    }
-  }, [selectedRefund]);
 
   function resetFilters() {
     setSearchQuery("");
     setStatusFilter("all");
     setPaymentFilter("all");
-    setRefundFilter("all");
     setTypeFilter("all");
     setClassFilter("all");
     setInstructorFilter("all");
@@ -263,30 +211,11 @@ export function AdminBookingsView() {
     searchQuery !== "" ||
     statusFilter !== "all" ||
     paymentFilter !== "all" ||
-    refundFilter !== "all" ||
     typeFilter !== "all" ||
     classFilter !== "all" ||
     instructorFilter !== "all" ||
     timingFilter !== "all" ||
     membershipFilter !== "all";
-
-  function handleSaveNote() {
-    if (selectedRefund) {
-      updateRefundNote(selectedRefund.id, adminNoteInput);
-    }
-  }
-
-  function handleAdvanceRefund(id: string) {
-    advanceRefund(id);
-    setRefunds(getOperationalRefunds());
-    setBookings(getOperationalBookings());
-  }
-
-  function handleRejectRefund(id: string) {
-    rejectRefund(id);
-    setRefunds(getOperationalRefunds());
-    setBookings(getOperationalBookings());
-  }
 
   const [exportNotice, setExportNotice] = useState<string | null>(null);
 
@@ -334,8 +263,9 @@ export function AdminBookingsView() {
       { header: "Payment ID", accessor: (b) => b.paymentId ?? "" },
       { header: "Payment Method", accessor: (b) => b.paymentMethod ?? "UPI" },
       { header: "Payment Status", accessor: (b) => b.paymentStatus ?? "paid" },
-      { header: "Refund ID", accessor: (b) => b.refundId ?? "" },
-      { header: "Refund Status", accessor: (b) => b.refundStatus ?? "none" },
+      { header: "Payroll %", accessor: (b) => b.payrollPercentageSnapshot ?? "" },
+      { header: "Instructor Payout", accessor: (b) => b.instructorPayrollAmount ?? "" },
+      { header: "Studio Share", accessor: (b) => b.studioShare ?? "" },
       { header: "Booking Created At", accessor: (b) => b.createdAt ?? "" },
       { header: "Cancelled At", accessor: (b) => b.cancelledAt ?? "" },
     ];
@@ -422,17 +352,7 @@ export function AdminBookingsView() {
           <p className="mt-1 text-xs text-[#65756e]">{metrics.pendingPayments} pending / failed</p>
         </div>
 
-        <div className="rounded-[1.25rem] border border-[#a65f3d]/20 bg-[#fbf8f5] p-4 shadow-[0_4px_16px_rgba(166,95,61,0.04)]">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#a65f3d]">Refund Requests</p>
-          <p className="mt-2 font-display text-3xl text-[#a65f3d]">{metrics.refundRequests}</p>
-          <p className="mt-1 text-xs text-[#a65f3d]/80">₹{metrics.totalRefundRequested.toLocaleString("en-IN")} requested</p>
-        </div>
 
-        <div className="rounded-[1.25rem] border border-[#17362d]/10 bg-white p-4 shadow-[0_4px_16px_rgba(36,57,47,0.03)]">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#738078]">Refunds Completed</p>
-          <p className="mt-2 font-display text-3xl text-[#3e5a62]">₹{metrics.totalCompletedRefunds.toLocaleString("en-IN")}</p>
-          <p className="mt-1 text-xs text-[#65756e]">Reversed through demo gateway</p>
-        </div>
       </div>
 
       {exportNotice && (
@@ -511,21 +431,7 @@ export function AdminBookingsView() {
             </NativeSelect>
           </div>
 
-          <div>
-            <label className="text-[11px] font-bold uppercase tracking-wider text-[#738078]">Refund Status</label>
-            <NativeSelect
-              value={refundFilter}
-              onChange={(e) => setRefundFilter(e.target.value)}
-              className="mt-1 h-9 w-full rounded-xl text-xs"
-            >
-              <NativeSelectOption value="all">All refunds</NativeSelectOption>
-              <NativeSelectOption value="not-requested">Not requested</NativeSelectOption>
-              <NativeSelectOption value="requested">Requested</NativeSelectOption>
-              <NativeSelectOption value="processing">Processing</NativeSelectOption>
-              <NativeSelectOption value="completed">Completed</NativeSelectOption>
-              <NativeSelectOption value="rejected">Rejected</NativeSelectOption>
-            </NativeSelect>
-          </div>
+
 
           <div>
             <label className="text-[11px] font-bold uppercase tracking-wider text-[#738078]">Booking Type</label>
@@ -655,7 +561,7 @@ export function AdminBookingsView() {
                 <th className="px-4 py-3.5">Amount</th>
                 <th className="px-4 py-3.5">Payment</th>
                 <th className="px-4 py-3.5">Booking Status</th>
-                <th className="px-4 py-3.5">Refund Status</th>
+                <th className="px-4 py-3.5">Payroll</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -729,8 +635,8 @@ export function AdminBookingsView() {
                       </td>
 
                       <td className="whitespace-nowrap px-4 py-3.5">
-                        <span className={`rounded-full px-2.5 py-1 text-[11px] capitalize ${refundBadge(item.refundStatus)}`}>
-                          {item.refundStatus && item.refundStatus !== "none" ? item.refundStatus : "—"}
+                        <span className="font-semibold text-[#17362d]">
+                          {item.instructorPayrollAmount !== undefined ? `₹${item.instructorPayrollAmount}` : "—"}
                         </span>
                       </td>
 
@@ -896,140 +802,28 @@ export function AdminBookingsView() {
                   </div>
                 </div>
 
-                {/* Refund Information */}
-                {selectedRefund ? (
-                  <div className="rounded-2xl border border-[#a65f3d]/20 bg-[#fbf6f2] p-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#a65f3d]">
-                        <RotateCcw className="size-3.5" /> Refund Request Details
-                      </h3>
-                      <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold capitalize ${refundBadge(selectedRefund.status)}`}>
-                        {selectedRefund.status}
-                      </span>
-                    </div>
-
-                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+                {/* Instructor Payroll Information */}
+                {selectedBooking.instructorPayrollAmount !== undefined && (
+                  <div className="rounded-2xl border border-[#17362d]/10 bg-white p-4">
+                    <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#245237]">
+                      <Sparkles className="size-3.5" /> Instructor Payroll
+                    </h3>
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
                       <div>
-                        <p className="text-xs text-[#738078]">Refund ID</p>
-                        <p className="font-mono text-xs font-semibold text-[#17362d]">{selectedRefund.id}</p>
+                        <p className="text-xs text-[#738078]">Payout Amount</p>
+                        <p className="font-display text-xl font-bold text-[#17362d]">₹{selectedBooking.instructorPayrollAmount}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-[#738078]">Refund Amount</p>
-                        <p className="font-bold text-[#a65f3d]">₹{selectedRefund.amount}</p>
+                        <p className="text-xs text-[#738078]">Payroll Percentage</p>
+                        <p className="font-semibold text-[#17362d]">{selectedBooking.payrollPercentageSnapshot}%</p>
                       </div>
                       <div>
-                        <p className="text-xs text-[#738078]">Requested At</p>
-                        <p className="text-xs text-[#17362d]">
-                          {new Date(selectedRefund.requestedAt).toLocaleString("en-IN", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                            timeZone: "Asia/Kolkata",
-                          })}
-                        </p>
-                      </div>
-                      {selectedRefund.processedAt && (
-                        <div>
-                          <p className="text-xs text-[#738078]">Processed At</p>
-                          <p className="text-xs text-[#17362d]">
-                            {new Date(selectedRefund.processedAt).toLocaleString("en-IN", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                              timeZone: "Asia/Kolkata",
-                            })}
-                          </p>
-                        </div>
-                      )}
-                      {selectedRefund.completedAt && (
-                        <div>
-                          <p className="text-xs text-[#738078]">Completed At</p>
-                          <p className="text-xs text-[#17362d]">
-                            {new Date(selectedRefund.completedAt).toLocaleString("en-IN", {
-                              dateStyle: "short",
-                              timeStyle: "short",
-                              timeZone: "Asia/Kolkata",
-                            })}
-                          </p>
-                        </div>
-                      )}
-                      {selectedRefund.processedBy && (
-                        <div>
-                          <p className="text-xs text-[#738078]">Handled By</p>
-                          <p className="text-xs text-[#17362d]">{selectedRefund.processedBy}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-3 border-t border-[#a65f3d]/10 pt-3">
-                      <label className="text-xs font-semibold text-[#17362d]">Admin Note / Audit Remarks</label>
-                      <div className="mt-1 flex gap-2">
-                        <Input
-                          value={adminNoteInput}
-                          onChange={(e) => setAdminNoteInput(e.target.value)}
-                          placeholder="Add internal notes on this refund..."
-                          className="h-9 rounded-xl bg-white text-xs"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={handleSaveNote}
-                          className="h-9 rounded-xl bg-[#254d3f] text-xs text-white"
-                        >
-                          Save Note
-                        </Button>
+                        <p className="text-xs text-[#738078]">Studio Share</p>
+                        <p className="font-semibold text-[#17362d]">₹{selectedBooking.studioShare}</p>
                       </div>
                     </div>
-
-                    {/* Refund Actions */}
-                    {(selectedRefund.status === "requested" || selectedRefund.status === "processing") && (
-                      <div className="mt-4 flex flex-wrap gap-2 border-t border-[#a65f3d]/15 pt-3">
-                        {selectedRefund.status === "requested" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleAdvanceRefund(selectedRefund.id)}
-                            className="rounded-full bg-[#3e5a62] text-xs text-white hover:bg-[#2c4349]"
-                          >
-                            Mark as Processing
-                          </Button>
-                        )}
-                        <Button
-                          size="sm"
-                          onClick={() =>
-                            setConfirmAction({
-                              type: "complete",
-                              refundId: selectedRefund.id,
-                              bookingId: selectedBooking.id,
-                              amount: selectedRefund.amount,
-                              customerName: selectedBooking.customerName,
-                            })
-                          }
-                          className="rounded-full bg-[#254d3f] text-xs text-white hover:bg-[#17362d]"
-                        >
-                          Complete Refund (₹{selectedRefund.amount})
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() =>
-                            setConfirmAction({
-                              type: "reject",
-                              refundId: selectedRefund.id,
-                              bookingId: selectedBooking.id,
-                              amount: selectedRefund.amount,
-                              customerName: selectedBooking.customerName,
-                            })
-                          }
-                          className="rounded-full border-[#8b3d32]/30 text-xs text-[#8b3d32] hover:bg-[#fbf4f3]"
-                        >
-                          Reject Request
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-[#17362d]/15 bg-white p-4 text-center">
-                    <p className="text-xs text-[#738078]">No refund request has been created for this booking.</p>
                   </div>
                 )}
-
                 {/* Booking Lifecycle Timeline */}
                 <div className="rounded-2xl border border-[#17362d]/10 bg-white p-4">
                   <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#738078]">
@@ -1118,59 +912,7 @@ export function AdminBookingsView() {
                       </div>
                     )}
 
-                    {selectedRefund && (
-                      <div className="flex items-start gap-3 text-xs">
-                        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#fbf4eb] text-[#a65f3d] text-[10px] font-bold">
-                          ₹
-                        </span>
-                        <div>
-                          <p className="font-semibold text-[#17362d]">Refund Requested</p>
-                          <p className="text-[11px] text-[#738078]">
-                            ₹{selectedRefund.amount} requested · {selectedRefund.reason}
-                          </p>
-                        </div>
-                      </div>
-                    )}
 
-                    {selectedRefund && (selectedRefund.status === "processing" || selectedRefund.status === "completed") && (
-                      <div className="flex items-start gap-3 text-xs">
-                        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#eef3f6] text-[#2c535d] text-[10px] font-bold">
-                          ⚙
-                        </span>
-                        <div>
-                          <p className="font-semibold text-[#17362d]">Refund Processing</p>
-                          <p className="text-[11px] text-[#738078]">
-                            Review and validation underway by Studio Admin
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedRefund && selectedRefund.status === "completed" && (
-                      <div className="flex items-start gap-3 text-xs">
-                        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#deeee3] text-[#245237] text-[10px] font-bold">
-                          ✓
-                        </span>
-                        <div>
-                          <p className="font-semibold text-[#245237]">Refund Completed</p>
-                          <p className="text-[11px] text-[#738078]">Payment returned to original payment method</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {selectedRefund && selectedRefund.status === "rejected" && (
-                      <div className="flex items-start gap-3 text-xs">
-                        <span className="grid size-5 shrink-0 place-items-center rounded-full bg-[#fbeaea] text-[#9b3a32] text-[10px] font-bold">
-                          ✕
-                        </span>
-                        <div>
-                          <p className="font-semibold text-[#9b3a32]">Refund Rejected</p>
-                          <p className="text-[11px] text-[#738078]">
-                            Request did not meet studio cancellation criteria
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -1199,45 +941,6 @@ export function AdminBookingsView() {
         </DialogContent>
       </Dialog>
 
-      {/* Confirmation Dialog for Sensitive Actions */}
-      <AlertDialog
-        open={Boolean(confirmAction)}
-        onOpenChange={(open) => {
-          if (!open) setConfirmAction(null);
-        }}
-      >
-        <AlertDialogContent className="rounded-[1.5rem] bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display text-2xl">
-              {confirmAction?.type === "complete" ? "Complete Refund?" : "Reject Refund Request?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-[#65756e]">
-              {confirmAction?.type === "complete"
-                ? `Are you sure you want to mark the refund of ₹${confirmAction?.amount} for ${confirmAction?.customerName} as completed? This will update the payment ledger and notify the customer.`
-                : `Are you sure you want to reject the refund request for ${confirmAction?.customerName}? This will mark the refund as rejected and notify the customer.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="mt-4 gap-2">
-            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              className={`rounded-full text-white ${
-                confirmAction?.type === "complete" ? "bg-[#254d3f] hover:bg-[#17362d]" : "bg-[#8b3d32] hover:bg-[#702f27]"
-              }`}
-              onClick={() => {
-                if (!confirmAction) return;
-                if (confirmAction.type === "complete") {
-                  handleAdvanceRefund(confirmAction.refundId);
-                } else {
-                  handleRejectRefund(confirmAction.refundId);
-                }
-                setConfirmAction(null);
-              }}
-            >
-              {confirmAction?.type === "complete" ? "Confirm Completion" : "Confirm Rejection"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

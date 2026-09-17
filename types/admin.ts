@@ -18,14 +18,14 @@ export interface AdminField {
   placeholder?: string;
 }
 
-export type AdminOperation = "memberships" | "bookings" | "payments" | "refunds" | "notifications";
+export type AdminOperation = "memberships" | "bookings" | "payments" | "notifications";
 
 export interface OperationalMembership {
   id: string; customerId: string; customerName: string; planName: string;
   status: "active" | "expired" | "paused"; startsAt: string; endsAt: string; amount: number;
 }
 
-export type RefundStatus = "requested" | "processing" | "completed" | "rejected";
+
 
 export interface OperationalBooking {
   id: string;
@@ -46,10 +46,12 @@ export interface OperationalBooking {
   paymentMethod?: string;
   paymentStatus?: "paid" | "pending" | "failed" | "refunded";
   status: "confirmed" | "cancelled" | "attended" | "no-show" | "pending";
-  refundStatus?: "none" | "requested" | "processing" | "completed" | "rejected";
-  refundId?: string;
+
   createdAt?: string;
   cancelledAt?: string;
+  payrollPercentageSnapshot?: number;
+  instructorPayrollAmount?: number;
+  studioShare?: number;
 }
 
 export interface OperationalPayment {
@@ -64,23 +66,6 @@ export interface OperationalPayment {
   referenceId: string;
 }
 
-export interface OperationalRefund {
-  id: string;
-  bookingId?: string;
-  paymentId: string;
-  customerId: string;
-  customerName: string;
-  sessionId?: string;
-  className?: string;
-  amount: number;
-  reason: string;
-  status: RefundStatus;
-  requestedAt: string;
-  processedAt?: string;
-  completedAt?: string;
-  processedBy?: string;
-  adminNote?: string;
-}
 
 export interface OperationalNotification {
   id: string; audience: string; customerId?: string; title: string; body: string;

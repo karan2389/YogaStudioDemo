@@ -47,10 +47,11 @@ export const adminResourceConfigs: Record<AdminResource, AdminResourceConfig> = 
       { key: "name", label: "Full name", type: "text", required: true }, { key: "email", label: "Email", type: "email", required: true },
       { key: "phone", label: "Phone", type: "tel", required: true }, { key: "specialties", label: "Specialties", type: "list", placeholder: "Hatha, Pranayama" },
       { key: "experienceYears", label: "Experience (years)", type: "number", required: true }, { key: "bio", label: "Short biography", type: "textarea" },
+      { key: "payrollPercentage", label: "Payroll Percentage (%)", type: "number", required: true },
       { key: "status", label: "Account status", type: "select", options: statusOptions },
     ],
-    titleFor: (record) => String(record.name), detailsFor: (record) => [Array.isArray(record.specialties) ? record.specialties.join(" · ") : "", `${record.experienceYears} years experience`, String(record.email)], statusFor: (record) => String(record.status),
-    newRecord: () => ({ id: id("ins"), name: "", email: "", phone: "", role: "instructor", specialties: [], experienceYears: 1, bio: "", status: "active" }),
+    titleFor: (record) => String(record.name), detailsFor: (record) => [Array.isArray(record.specialties) ? record.specialties.join(" · ") : "", `${record.experienceYears} years experience`, record.payrollPercentage != null ? `${record.payrollPercentage}% payout` : "", String(record.email)].filter(Boolean), statusFor: (record) => String(record.status),
+    newRecord: () => ({ id: id("ins"), name: "", email: "", phone: "", role: "instructor", specialties: [], experienceYears: 1, bio: "", payrollPercentage: 60, status: "active" }),
   },
   classes: {
     resource: "classes", eyebrow: "Studio catalogue", title: "Classes", singular: "class",

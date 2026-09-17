@@ -9,8 +9,6 @@ export type PaymentStatus = "pending" | "paid" | "failed" | "refunded" | "partia
 export type AttendanceStatus = "present" | "absent" | "not-marked";
 export type NotificationChannel = "email" | "whatsapp" | "in-app";
 export type NotificationStatus = "queued" | "sent" | "failed" | "read";
-export type RefundStatus = "requested" | "processing" | "completed" | "rejected";
-
 export interface User {
   id: ID;
   name: string;
@@ -32,6 +30,7 @@ export interface Instructor extends User {
   specialties: string[];
   experienceYears: number;
   bio: string;
+  payrollPercentage?: number;
 }
 
 export interface ClassCategory {
@@ -66,7 +65,20 @@ export interface Session {
   capacity: number;
   bookedSeats: number;
   status: "scheduled" | "completed" | "cancelled";
+  recurringPlanId?: ID;
   notes?: string;
+}
+
+export interface RecurringPlan {
+  id: ID;
+  classId: ID;
+  instructorId: ID;
+  startDate: string;
+  endDate: string;
+  weekdays: number[]; // 0 for Sunday, 1 for Monday, etc.
+  startTime: string; // "HH:mm"
+  endTime: string;   // "HH:mm"
+  createdAt: string;
 }
 
 export interface Booking {
@@ -129,11 +141,3 @@ export interface Notification {
   createdAt: string;
 }
 
-export interface Refund {
-  id: ID;
-  paymentId: ID;
-  amount: number;
-  reason: string;
-  status: RefundStatus;
-  requestedAt: string;
-}

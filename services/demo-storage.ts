@@ -65,6 +65,38 @@ export function saveDemoBooking(booking: DemoBookingRecord) {
   notify();
 }
 
+export function saveDemoCartBookings(bookingsToAdd: DemoBookingRecord[]) {
+  const bookings = getDemoBookings();
+  window.localStorage.setItem(BOOKINGS_KEY, JSON.stringify([...bookingsToAdd, ...bookings]));
+  window.localStorage.setItem("ananda-latest-booking", bookingsToAdd[0].id);
+  
+  const payments = getDemoPayments();
+  const totalAmount = bookingsToAdd.reduce((sum, b) => sum + b.amount, 0);
+  const first = bookingsToAdd[0];
+  
+  const paymentRecord = {
+    id: first.paymentId,
+    customerId: first.customerId,
+    description: `Combined Checkout: ${bookingsToAdd.length} sessions`,
+    amount: totalAmount,
+    method: first.paymentMethod.toUpperCase(),
+    status: "paid" as const,
+    createdAt: first.createdAt,
+    referenceId: `CART-${Date.now().toString(36).toUpperCase()}`
+  };
+  
+  window.localStorage.setItem(PAYMENTS_KEY, JSON.stringify([paymentRecord, ...payments]));
+  
+  addDemoNotification({
+    customerId: first.customerId,
+    title: "Multiple Bookings Confirmed",
+    body: `You have successfully booked ${bookingsToAdd.length} sessions.`,
+    category: "booking"
+  });
+  
+  notify();
+}
+
 export function getLatestDemoBooking(): DemoBookingRecord | null {
   if (typeof window === "undefined") return null;
   const latestId = window.localStorage.getItem("ananda-latest-booking");
@@ -83,11 +115,10 @@ export function canCancelBooking(booking: DemoBookingRecord) {
   return booking.status === "confirmed" && new Date(booking.startsAt).getTime() - Date.now() >= getStudioSettings().bookingCutoffHours * 60 * 60 * 1000;
 }
 
-export function cancelBookingAndRequestRefund(bookingId: string): {
+export function cancelBooking(bookingId: string): {
   success: boolean;
-  reason?: "not_found" | "too_late" | "already_requested" | "already_cancelled";
+  reason?: "not_found" | "too_late" | "already_cancelled";
   message: string;
-  status?: string;
 } {
   if (typeof window === "undefined") {
     return { success: false, reason: "not_found", message: "Window storage not available." };
@@ -99,12 +130,11 @@ export function cancelBookingAndRequestRefund(bookingId: string): {
   }
 
   // Duplicate prevention
-  if (booking.status === "cancelled" || booking.refundStatus === "requested" || booking.refundStatus === "processing" || booking.refundStatus === "completed") {
+  if (booking.status === "cancelled") {
     return {
       success: false,
-      reason: "already_requested",
-      message: "A refund request already exists for this booking.",
-      status: booking.refundStatus ?? "requested",
+      reason: "already_cancelled",
+      message: "This booking is already cancelled.",
     };
   }
 
@@ -118,7 +148,6 @@ export function cancelBookingAndRequestRefund(bookingId: string): {
   }
 
   const now = new Date().toISOString();
-  const refundId = `ref-${booking.id.replace("book-", "")}`;
 
   // 1. Update Booking
   const updatedBookings = bookings.map((item) =>
@@ -127,83 +156,28 @@ export function cancelBookingAndRequestRefund(bookingId: string): {
           ...item,
           status: "cancelled" as const,
           cancelledAt: now,
-          refundStatus: "requested" as const,
-          refundRequestId: refundId,
         }
       : item
   );
   window.localStorage.setItem(BOOKINGS_KEY, JSON.stringify(updatedBookings));
 
-  // 2. Create Refund Request Record in Operations
-  const refundRecord = {
-    id: refundId,
-    bookingId: booking.id,
-    paymentId: booking.paymentId,
-    customerId: booking.customerId,
-    customerName: booking.customerName,
-    sessionId: booking.sessionId,
-    className: booking.className,
-    amount: booking.amount,
-    reason: "Eligible booking cancellation",
-    status: "requested",
-    requestedAt: now,
-    adminNote: "Submitted via customer self-service cancellation",
-  };
-
-  const storedRefunds = window.localStorage.getItem("ananda-operations-refunds");
-  let currentRefunds: OperationalRefund[] = [];
-  if (storedRefunds) {
-    try { currentRefunds = JSON.parse(storedRefunds); } catch { currentRefunds = []; }
-  }
-  window.localStorage.setItem(
-    "ananda-operations-refunds",
-    JSON.stringify([refundRecord, ...currentRefunds.filter((r) => r.id !== refundId && r.bookingId !== booking.id)])
-  );
-
-  // 3. Admin Notification
-  const formattedDate = new Date(booking.startsAt).toLocaleString("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Kolkata",
-  });
-  const adminNotice: OperationalNotification = {
-    id: `camp-refund-${Date.now().toString(36).toUpperCase()}`,
-    audience: "Studio Admin",
-    customerId: booking.customerId,
-    title: "New refund request received",
-    body: `New refund request received from ${booking.customerName} for ${booking.className} on ${formattedDate}. Amount: ₹${booking.amount}.`,
-    channel: "in-app",
-    status: "sent",
-    createdAt: now,
-  };
-  const storedNotices = window.localStorage.getItem("ananda-operations-notifications");
-  let currentNotices: OperationalNotification[] = [];
-  if (storedNotices) {
-    try { currentNotices = JSON.parse(storedNotices); } catch { currentNotices = []; }
-  }
-  window.localStorage.setItem(
-    "ananda-operations-notifications",
-    JSON.stringify([adminNotice, ...currentNotices])
-  );
-
-  // 4. Customer Notification
+  // 2. Customer Notification
   addDemoNotification({
     customerId: booking.customerId,
-    title: "Cancellation & refund request submitted",
-    body: `Your booking for ${booking.className} has been cancelled and your refund request of ₹${booking.amount} has been sent to the studio admin.`,
-    category: "payment",
+    title: "Booking cancelled",
+    body: `Your booking for ${booking.className} has been cancelled.`,
+    category: "booking",
   });
 
   notify();
   return {
     success: true,
-    message: "Your booking has been cancelled and your refund request has been sent to the studio admin.",
-    status: "requested",
+    message: "Your booking has been cancelled successfully.",
   };
 }
 
 export function cancelDemoBooking(bookingId: string) {
-  return cancelBookingAndRequestRefund(bookingId).success;
+  return cancelBooking(bookingId).success;
 }
 
 export function getDemoMemberships(): DemoMembershipRecord[] {

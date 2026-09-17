@@ -18,6 +18,7 @@ export const instructors: Instructor[] = [
     specialties: ["Hatha", "Pranayama"],
     experienceYears: 9,
     bio: "Grounded practices that bring breath, alignment and calm into everyday life.",
+    payrollPercentage: 60,
   },
   {
     id: "ins-ananya",
@@ -29,6 +30,7 @@ export const instructors: Instructor[] = [
     specialties: ["Vinyasa", "Mobility"],
     experienceYears: 7,
     bio: "Fluid, thoughtful classes designed to build confidence and joyful movement.",
+    payrollPercentage: 55,
   },
   {
     id: "ins-rohan",
@@ -40,6 +42,7 @@ export const instructors: Instructor[] = [
     specialties: ["Power Yoga", "Strength"],
     experienceYears: 8,
     bio: "Energising practice with precise guidance, purposeful strength and steady progress.",
+    payrollPercentage: 65,
   },
 ];
 

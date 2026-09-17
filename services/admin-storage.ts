@@ -110,3 +110,48 @@ export function upsertStudioSession(session: (typeof sessions)[number]) {
 export function deleteStudioSession(id: string) {
   deleteAdminRecord("sessions", id);
 }
+
+export function generateRecurringSessions(params: {
+  classId: string;
+  instructorId: string;
+  startDate: string;
+  endDate: string;
+  weekdays: number[]; // 0 for Sunday, 1 for Monday, etc.
+  excludedDates?: string[]; // "YYYY-MM-DD"
+  startTime: string; // "HH:mm"
+  capacity: number;
+}) {
+  const currentSessions = getAdminCollection("sessions");
+  const newSessions: AdminRecord[] = [];
+  const seed = Date.now().toString(36).toUpperCase();
+  const planId = `RP-${seed}`;
+  
+  const start = new Date(params.startDate + "T00:00:00+05:30");
+  const end = new Date(params.endDate + "T23:59:59+05:30");
+  let current = new Date(start);
+  
+  let i = 0;
+  while (current <= end) {
+    const dateStr = current.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+    if (params.weekdays.includes(current.getDay()) && !params.excludedDates?.includes(dateStr)) {
+      const startsAt = `${dateStr}T${params.startTime}:00+05:30`;
+      
+      newSessions.push({
+        id: `S-${seed}-${i++}`,
+        classId: params.classId,
+        instructorId: params.instructorId,
+        date: dateStr,
+        startTime: params.startTime,
+        startsAt,
+        capacity: params.capacity,
+        bookedSeats: 0,
+        status: "scheduled",
+        recurringPlanId: planId,
+      });
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  
+  saveAdminCollection("sessions", [...newSessions, ...currentSessions]);
+  return newSessions.length;
+}

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, CalendarDays, CheckCircle2, Clock3, RotateCcw } from "lucide-react";
+import { AlertCircle, CalendarDays, CheckCircle2, Clock3, RotateCcw, List } from "lucide-react";
 import { DashboardPageHeader } from "@/components/dashboard/dashboard-page-header";
+import { CustomerCalendar } from "@/components/dashboard/customer-calendar";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -17,28 +18,20 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useDemoSession } from "@/hooks/use-demo-session";
-import { canCancelBooking, cancelBookingAndRequestRefund, getDemoBookings } from "@/services/demo-storage";
-import { getOperationalRefunds } from "@/services/admin-operations";
+import { canCancelBooking, cancelBooking, getDemoBookings } from "@/services/demo-storage";
 import type { DemoBookingRecord } from "@/types/demo";
 
 export function BookingsView() {
   const { session } = useDemoSession();
   const [items, setItems] = useState<DemoBookingRecord[]>([]);
   const [feedback, setFeedback] = useState<{ type: "success" | "error" | "info"; message: string } | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("list");
 
   useEffect(() => {
     const load = () => {
       if (session) {
-        const storedRefunds = getOperationalRefunds();
         const userBookings = getDemoBookings()
-          .filter((item) => item.customerId === session.id)
-          .map((booking) => {
-            const refund = storedRefunds.find((r) => r.bookingId === booking.id || r.paymentId === booking.paymentId);
-            if (refund && (!booking.refundStatus || booking.refundStatus === "not-applicable")) {
-              return { ...booking, refundStatus: refund.status as any };
-            }
-            return booking;
-          });
+          .filter((item) => item.customerId === session.id);
         setItems(userBookings);
       }
     };
@@ -48,11 +41,11 @@ export function BookingsView() {
   }, [session]);
 
   function handleCancel(bookingId: string) {
-    const result = cancelBookingAndRequestRefund(bookingId);
+    const result = cancelBooking(bookingId);
     if (result.success) {
       setFeedback({ type: "success", message: result.message });
     } else {
-      setFeedback({ type: result.reason === "already_requested" ? "info" : "error", message: result.message });
+      setFeedback({ type: "error", message: result.message });
     }
   }
 
@@ -61,7 +54,7 @@ export function BookingsView() {
       <DashboardPageHeader
         eyebrow="My bookings"
         title="Your sessions."
-        copy="View confirmed and cancelled bookings. Cancellations and refund requests are available until two hours before class."
+        copy="View confirmed and cancelled bookings. Cancellations are available until two hours before class."
         action={
           <Button asChild className="h-11 rounded-full bg-[#254d3f] text-white hover:bg-[#17362d]">
             <Link href="/schedule">Book another class</Link>
@@ -97,12 +90,40 @@ export function BookingsView() {
         </div>
       )}
 
+      <div className="mb-6 flex justify-end">
+        <div className="flex bg-[#17362d]/5 p-1 rounded-full border border-[#17362d]/10">
+          <button 
+            onClick={() => setViewMode("list")} 
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition ${viewMode === "list" ? "bg-white text-[#17362d] shadow-sm" : "text-[#65756e] hover:text-[#17362d]"}`}
+          >
+            <List className="size-4" /> List
+          </button>
+          <button 
+            onClick={() => setViewMode("calendar")} 
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition ${viewMode === "calendar" ? "bg-white text-[#17362d] shadow-sm" : "text-[#65756e] hover:text-[#17362d]"}`}
+          >
+            <CalendarDays className="size-4" /> Calendar
+          </button>
+        </div>
+      </div>
+
       <div className="grid gap-4">
         {items.length ? (
-          items.map((booking) => {
+          viewMode === "calendar" ? (
+            <CustomerCalendar 
+              bookings={items} 
+              onCancel={(id, success, message) => {
+                if (success) {
+                  setFeedback({ type: "success", message });
+                } else {
+                  setFeedback({ type: "error", message });
+                }
+              }} 
+            />
+          ) : (
+            items.map((booking) => {
             const date = new Date(booking.startsAt);
             const cancellable = canCancelBooking(booking);
-            const refundStatus = booking.refundStatus ?? (booking.status === "cancelled" ? "requested" : "none");
 
             return (
               <article
@@ -159,46 +180,13 @@ export function BookingsView() {
 
                     {booking.status === "cancelled" ? (
                       <div className="mt-2 text-xs">
-                        {refundStatus === "requested" && (
-                          <div className="text-[#a65f3d]">
-                            <p className="font-semibold flex items-center justify-end gap-1">
-                              <Clock3 className="size-3.5" />
-                              Refund requested
-                            </p>
-                            <p className="mt-1 text-[11px] text-[#738078]">
-                              Your refund request is under review by the studio admin.
-                            </p>
-                          </div>
-                        )}
-                        {refundStatus === "processing" && (
-                          <div className="text-[#3e5a62]">
-                            <p className="font-semibold flex items-center justify-end gap-1">
-                              <RotateCcw className="size-3.5 animate-spin" />
-                              Refund processing
-                            </p>
-                            <p className="mt-1 text-[11px] text-[#738078]">
-                              Studio admin is processing your payment reversal.
-                            </p>
-                          </div>
-                        )}
-                        {(refundStatus === "completed" || refundStatus === "refunded") && (
-                          <div className="text-[#315744]">
-                            <p className="font-semibold flex items-center justify-end gap-1">
-                              <CheckCircle2 className="size-3.5" />
-                              Refunded · ₹{booking.amount}
-                            </p>
-                            <p className="mt-1 text-[11px] text-[#738078]">Reversed to original payment method.</p>
-                          </div>
-                        )}
-                        {refundStatus === "rejected" && (
-                          <div className="text-[#8b3d32]">
-                            <p className="font-semibold flex items-center justify-end gap-1">
-                              <AlertCircle className="size-3.5" />
-                              Refund rejected
-                            </p>
-                            <p className="mt-1 text-[11px] text-[#738078]">See studio notifications for details.</p>
-                          </div>
-                        )}
+                        <div className="text-[#8b3d32]">
+                          <p className="font-semibold flex items-center justify-end gap-1">
+                            <AlertCircle className="size-3.5" />
+                            Cancelled
+                          </p>
+                          <p className="mt-1 text-[11px] text-[#738078]">No refund issued for cancelled bookings.</p>
+                        </div>
                       </div>
                     ) : cancellable ? (
                       <AlertDialog>
@@ -217,8 +205,7 @@ export function BookingsView() {
                               Cancel {booking.className}?
                             </AlertDialogTitle>
                             <AlertDialogDescription className="text-sm leading-6 text-[#65756e]">
-                              This session is outside the two-hour cutoff. Cancelling will submit a refund request of
-                              ₹{booking.amount} to the studio admin for review.
+                              Cancellation Policy: You can cancel this booking up to 2 hours before the session. No refund will be issued for cancelled bookings.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter className="mt-4 gap-2 sm:gap-3">
@@ -227,7 +214,7 @@ export function BookingsView() {
                               className="rounded-full bg-[#9a4337] text-white hover:bg-[#7f342b]"
                               onClick={() => handleCancel(booking.id)}
                             >
-                              Cancel and request a refund
+                              Cancel Booking
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -261,8 +248,8 @@ export function BookingsView() {
       </div>
 
       <p className="mt-5 text-xs leading-5 text-[#738078]">
-        Demo rule: cancellation and refund requests are available until two hours before the session start time.
-        Submitted refund requests are reviewed in the Studio Admin panel. All state is stored locally in your browser.
+        Demo rule: cancellations are available until two hours before the session start time.
+        All state is stored locally in your browser.
       </p>
     </>
   );

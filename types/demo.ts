@@ -23,8 +23,9 @@ export interface DemoBookingRecord {
   status: "confirmed" | "cancelled";
   createdAt: string;
   cancelledAt?: string;
-  refundStatus?: "not-applicable" | "requested" | "processing" | "completed" | "rejected" | "refunded";
-  refundRequestId?: string;
+  payrollPercentageSnapshot?: number;
+  instructorPayrollAmount?: number;
+  studioShare?: number;
 }
 
 export interface DemoMembershipRecord {
